@@ -1,0 +1,363 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Minecraft File Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #7f5af0;
+      --background: #18181b;
+      --surface: #232338;
+      --accent: #5ffbf1;
+      --danger: #ff5470;
+      --success: #36f09f;
+      font-family: 'Montserrat', system-ui,Segoe UI,Roboto,Arial;
+      color: #f8fafc;
+      font-size: 16px;
+    }
+    html, body { margin:0; padding:0; min-height:100vh; background: linear-gradient(120deg, #232338 0%, #7f5af0 100%); }
+    body { display:flex; flex-direction:column; min-height:100vh; }
+    header { display:flex; justify-content:space-between; padding:20px; background:var(--surface); color:#fff; }
+    header h1 { margin:0; font-size:2rem; background:linear-gradient(90deg,#5ffbf1,#7f5af0); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .container { flex:1; display:flex; flex-direction:column; padding:50px; max-width:700px; margin:auto; gap:12px; }
+    .btn { background:linear-gradient(90deg,#7f5af0,#5ffbf1); color:#fff; padding:8px 16px; border-radius:8px; border:0; cursor:pointer; font-weight:700; }
+    .btn.danger{background:linear-gradient(90deg,#ff5470,#ff96c0);} .btn.secondary{background:linear-gradient(90deg,#232338,#7f5af0); border:1px solid var(--accent);}
+    .files{
+      background:#232338; 
+      padding:12px; 
+      border-radius:12px; 
+      min-height:200px; 
+      max-height:660px; 
+      overflow-y:auto; 
+      overflow-x:hidden;
+      display:flex; 
+      flex-direction:column;
+      gap:0;
+    }
+    .chunk{
+      display:flex; 
+      flex-direction:column; 
+      min-width:0; 
+      border:none; 
+      background:none; 
+      vertical-align:top;
+      margin-bottom: 0;
+    }
+    .file{
+      display:flex; 
+      flex-direction:column;
+      align-items:center; 
+      justify-content: flex-start; 
+      padding:16px 0 10px 0; 
+      border-bottom:1px solid #333; 
+      position:relative;
+    }
+    .meta{
+      display:flex; 
+      align-items:center; 
+      gap:10px; 
+      margin-top: 10px;
+    }
+    .name{
+      font-weight:700; 
+      color:var(--accent);
+      word-break: break-all;
+      text-align:center;
+    }
+    .actions{display:flex; gap:6px; justify-content:center; margin-top:8px;}
+    .thumb{
+      width:200px; 
+      height:200px; 
+      object-fit:cover; 
+      border-radius:12px; 
+      border:3px solid var(--accent);
+      display:block;
+      margin:0 auto 6px auto;
+      background: #191925;
+    }
+    #dropZone{border:2px dashed var(--accent); padding:7px; text-align:; border-radius:10px; color:var(--accent);}
+    #progressBar{width:100%; height:8px; background:#333; border-radius:6px; margin-top:10px; display:none;} #progressFill{width:0%; height:100%; background:var(--accent); border-radius:6px;}
+    #msgBox{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--accent); color:#232338; padding:10px 20px; border-radius:10px; display:none; font-weight:700;}
+    .rename-box{display:flex; gap:6px; align-items:center;} 
+    .rename-input{padding:6px; border-radius:6px; border:1px solid #666; background:#18181b; color:#fff;}
+    #loadingOverlay {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(20,20,30,0.85);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    #loadingSpinner {
+      border: 6px solid #eee;
+      border-top: 6px solid var(--accent);
+      border-radius: 50%;
+      width: 60px; height: 60px;
+      animation: spin 0.9s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    #loadingText {
+      color: var(--accent);
+      font-weight: bold;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+    .chunks-indicator {
+      color: #888;
+      text-align: center;
+      margin: 8px 8;
+      font-size: 0.95rem;
+      user-select: none;
+    }
+    .chunk-nav-btn { display: none !important; }
+  </style>
+</head>
+<body>
+  <header><h1>Minecraft Packs</h1></header>
+  <div class="container">
+    <div id="dropZone">Drag & Drop your .mcpack or .mcworld here<br>‌‌</div>
+    <button class="btn" id="uploadBtn">Upload</button>
+    <input type="file" id="fileInput" accept=".mcpack,.mcworld" style="display:none" multiple>
+    <input type="text" id="searchInput" placeholder="Search packs..." style="padding:8px; border-radius:6px; border:1px solid #666;">
+    <div id="progressBar"><div id="progressFill"></div></div>
+    <div class="chunks-indicator" id="chunksIndicator"></div>
+    <div style="text-align: center;">
+      <button class="chunk-nav-btn" id="prevChunkBtn" title="Previous Chunk">&#8678;</button>
+      <button class="chunk-nav-btn" id="nextChunkBtn" title="Next Chunk">&#8680;</button>
+    </div>
+    <div class="files" id="fileList"></div>
+  </div>
+  <div id="msgBox" aria-live="polite"></div>
+  <div id="loadingOverlay">
+    <div id="loadingSpinner"></div>
+    <div id="loadingText">Uploading... <span id="loadingPercent"></span></div>
+  </div>
+  <script>
+const DB_NAME='mc-file-manager-db'; const STORE='files'; let db;
+let filesCache=[]; let chunkSize = 6;
+
+// Utility for loading overlay
+function showLoading(percent=0) {
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.style.display = 'flex';
+  document.getElementById('loadingPercent').textContent = percent ? `${percent}%` : '';
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Message box
+function showMsg(text){const box=document.getElementById('msgBox'); box.textContent=text; box.style.display='block'; setTimeout(()=>box.style.display='none',2000);} 
+
+function openDB(){return new Promise((res,rej)=>{const req=indexedDB.open(DB_NAME,1); req.onupgradeneeded=e=>{let d=e.target.result;if(!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE,{keyPath:'id'});}; req.onsuccess=()=>{db=req.result; res(db)}; req.onerror=()=>rej(req.error);});} 
+function putFile(obj){return new Promise((res,rej)=>{let tx=db.transaction(STORE,'readwrite'); let s=tx.objectStore(STORE); let r=s.put(obj); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});} 
+function getAllFiles(){return new Promise((res,rej)=>{let tx=db.transaction(STORE,'readonly'); let s=tx.objectStore(STORE); let req=s.getAll(); req.onsuccess=()=>res(req.result); req.onerror=()=>rej(req.error);});} 
+function deleteFile(id){return new Promise((res,rej)=>{let tx=db.transaction(STORE,'readwrite'); let s=tx.objectStore(STORE); let r=s.delete(id); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error);});}
+
+function getChunks(arr, size) {
+  let chunks = [];
+  for(let i=0; i<arr.length; i+=size) {
+    chunks.push(arr.slice(i, i+size));
+  }
+  return chunks;
+}
+
+function renderFilesChunks(chunks) {
+  const list=document.getElementById('fileList');
+  list.innerHTML="";
+  if(chunks.length===0){list.innerHTML = '<div style="text-align:center;color:#888">No files yet</div>'; return;}
+  chunks.forEach((chunkFiles, chunkIdx) => {
+    if(chunkFiles.length === 0) return;
+    let chunkDiv = document.createElement('div');
+    chunkDiv.className = 'chunk';
+    chunkFiles.forEach(file=>{
+      let div=document.createElement('div'); 
+      div.className='file';
+      // Show big thumbnail on top
+      if(file.thumb){
+        let img=document.createElement('img'); 
+        img.src=file.thumb; 
+        img.className='thumb'; 
+        div.appendChild(img);
+      }
+      let name=document.createElement('div'); 
+      name.className='name'; 
+      name.textContent=file.name; 
+      div.appendChild(name);
+      let meta=document.createElement('div'); 
+      meta.className='meta';
+      let actions=document.createElement('div'); 
+      actions.className='actions';
+      let dl=document.createElement('button'); 
+      dl.className='btn'; 
+      dl.textContent='Download'; 
+      dl.onclick=()=>{const url=URL.createObjectURL(file.blob); const a=document.createElement('a'); a.href=url; a.download=file.name; a.click(); URL.revokeObjectURL(url);};
+      let setThumb=document.createElement('input'); 
+      setThumb.type='file'; 
+      setThumb.accept='image/*'; 
+      setThumb.style.display='none'; 
+      setThumb.onchange=ev=>{let imgf=ev.target.files[0]; if(!imgf) return; let r=new FileReader(); r.onload=async()=>{file.thumb=r.result; await putFile(file); renderAll(); showMsg('Thumbnail set');}; r.readAsDataURL(imgf);};
+      let thumbBtn=document.createElement('label'); 
+      thumbBtn.className='btn secondary'; 
+      thumbBtn.textContent='Set Thumbnail'; 
+      thumbBtn.appendChild(setThumb);
+      let renBtn=document.createElement('button'); 
+      renBtn.className='btn secondary'; 
+      renBtn.textContent='Rename'; 
+      renBtn.onclick=()=>startRename(file,div); 
+      actions.append(dl,thumbBtn,renBtn);
+      meta.appendChild(actions);
+      div.appendChild(meta);
+
+      // Long press for delete confirmation (no delete button)
+      let pressTimer=null;
+      function showDeleteConfirm(){
+        if(confirm('Delete '+file.name+'?')){
+          deleteFile(file.id).then(()=>{
+            showMsg('Deleted');
+            renderAll();
+          });
+        }
+      }
+      function startPress(){ pressTimer=setTimeout(showDeleteConfirm,500);}
+      function cancelPress(){ if(pressTimer){ clearTimeout(pressTimer); pressTimer=null; } }
+      div.addEventListener('mousedown', startPress);
+      div.addEventListener('mouseup', cancelPress);
+      div.addEventListener('mouseleave', cancelPress);
+      div.addEventListener('touchstart', startPress);
+      div.addEventListener('touchend', cancelPress);
+      div.addEventListener('touchmove', cancelPress);
+
+      chunkDiv.appendChild(div); 
+    });
+    list.appendChild(chunkDiv);
+  });
+}
+
+function updateChunksIndicator(totalChunks) {
+  const indicator = document.getElementById('chunksIndicator');
+  indicator.textContent = '';
+}
+
+function handleChunkRender(){
+  const fileList = document.getElementById('fileList');
+  fileList.scrollTop = 0;
+  if(filesCache.length === 0) {
+    fileList.innerHTML = '<div style="text-align:center;color:#888">No files yet</div>';
+    updateChunksIndicator(0);
+    return;
+  }
+  let chunks = getChunks(filesCache, chunkSize);
+  if(chunks.length === 0 || !chunks.some(arr => arr.length > 0)) {
+    fileList.innerHTML = '';
+    updateChunksIndicator(0);
+    return;
+  }
+  renderFilesChunks(chunks);
+  updateChunksIndicator(chunks.length);
+}
+
+function startRename(file,row){
+  const meta=row.querySelector('.meta'); meta.innerHTML='';
+  let box=document.createElement('div'); box.className='rename-box';
+  let input=document.createElement('input'); input.className='rename-input'; input.value=file.name; input.style.width='220px';
+  let save=document.createElement('button'); save.className='btn'; save.textContent='Save'; save.onclick=async()=>{
+    if(!input.value.trim()){ alert('Name cannot be empty'); return; }
+    file.name=input.value.trim(); await putFile(file); renderAll(); showMsg('Renamed');};
+  let cancel=document.createElement('button'); cancel.className='btn danger'; cancel.textContent='Cancel'; cancel.onclick=()=>renderAll();
+  box.append(input,save,cancel); meta.appendChild(box); 
+}
+
+async function renderAll(){
+  await openDB(); 
+  let all = await getAllFiles(); 
+  const q=document.getElementById('searchInput').value.toLowerCase(); 
+  if(q) all = all.filter(f=> (f.name||'').toLowerCase().includes(q));
+  filesCache = all.sort((a,b)=> (b.uploadedAt||'').localeCompare(a.uploadedAt||''));
+  handleChunkRender();
+}
+
+// Upload logic with loading/progress for large files
+async function handleUpload(f){ 
+  if(!f) return; 
+  if(!(f.name.endsWith('.mcpack')||f.name.endsWith('.mcworld'))){ 
+    showMsg('Only .mcpack or .mcworld allowed'); 
+    return; 
+  }
+  const reader=new FileReader();
+  const progress=document.getElementById('progressBar');
+  const fill=document.getElementById('progressFill');
+  // Show overlay for files > 5MB
+  const LARGE_FILE = 5*1024*1024;
+  let useOverlay = f.size > LARGE_FILE;
+  if(useOverlay) showLoading(0); else progress.style.display='block';
+  reader.onprogress=e=>{
+    if(e.lengthComputable){
+      let percent = Math.round(e.loaded/e.total*100);
+      if(useOverlay) document.getElementById('loadingPercent').textContent = percent+'%';
+      else fill.style.width=(percent)+'%';
+    }
+  };
+  reader.onload=async()=>{
+    const blob=new Blob([reader.result],{type:f.type||'application/octet-stream'});
+    const obj={id:Date.now().toString()+Math.random().toString(36).slice(2), name:f.name, blob, uploadedAt:new Date().toISOString(), thumb:null};
+    await putFile(obj);
+    if(useOverlay) hideLoading(); else {progress.style.display='none'; fill.style.width='0%';}
+    showMsg('Uploaded: '+f.name); renderAll();
+  };
+  reader.onerror = ()=>{
+    if(useOverlay) hideLoading(); else {progress.style.display='none'; fill.style.width='0%';}
+    showMsg('Error uploading file');
+  };
+  reader.readAsArrayBuffer(f);
+}
+
+// UI bindings
+const uploadBtn=document.getElementById('uploadBtn');
+const fileInput=document.getElementById('fileInput');
+uploadBtn.addEventListener('click', ()=> fileInput.click());
+fileInput.addEventListener('change', e=>{
+  if(e.target.files.length>0){
+    let files = Array.from(e.target.files);
+    let i=0;
+    function next(){
+      if(i>=files.length) return;
+      handleUpload(files[i]).then(()=>{i++; next();});
+    }
+    next();
+  }
+});
+
+const dz=document.getElementById('dropZone');
+dz.ondragover = e=>{ e.preventDefault(); dz.style.background='#333'; };
+dz.ondragleave = ()=>dz.style.background='';
+dz.ondrop = e=>{
+  e.preventDefault(); dz.style.background='';
+  let files = Array.from(e.dataTransfer.files);
+  let i=0;
+  function next(){
+    if(i>=files.length) return;
+    handleUpload(files[i]).then(()=>{i++; next();});
+  }
+  next();
+};
+
+document.getElementById('searchInput').oninput = ()=>{
+  clearTimeout(window._searchTimeout);
+  window._searchTimeout = setTimeout(()=>renderAll(),300);
+};
+
+(async()=>{
+  await openDB(); renderAll();
+})(); 
+  </script>
+</body>
+</html>
