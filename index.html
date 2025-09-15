@@ -123,9 +123,10 @@
 <body>
   <header><h1>Minecraft packs</h1></header>
   <div class="container">
-    <div id="dropZone">Drag & Drop your .mcpack or .mcworld here<br>‌‌</div>
-    <button class="btn" id="uploadBtn">Upload</button>
-    <input type="file" id="fileInput" accept=".mcpack,.mcworld" style="display:none" multiple>
+    <div style="text-align:center; padding: 20px; border: 2px dashed #7f5af0; border-radius: 12px;">
+      <p style="margin: 0;">‌</p>
+      <p style="font-size: 0.9em; margin: 5px 0 0;">‌‌  							‌</p>
+    </div>
     <input type="text" id="searchInput" placeholder="Search packs..." style="padding:8px; border-radius:6px; border:1px solid #666;">
     <div id="progressBar"><div id="progressFill"></div></div>
     <div class="chunks-indicator" id="chunksIndicator"></div>
@@ -204,7 +205,7 @@ function renderFilesChunks(chunks) {
       setThumb.type='file'; 
       setThumb.accept='image/*'; 
       setThumb.style.display='none'; 
-      setThumb.onchange=ev=>{let imgf=ev.target.files[0]; if(!imgf) return; let r=new FileReader(); r.onload=async()=>{file.thumb=r.result; await putFile(file); renderAll(); showMsg('Thumbnail set');}; r.readAsDataURL(imgf);};
+      setThumb.onchange=ev=>{let imgf=ev.target.files[0]; if(!imgf) return; let r=new FileReader(); r.onload=async(){file.thumb=r.result; await putFile(file); renderAll(); showMsg('Thumbnail set');}; r.readAsDataURL(imgf);};
       let thumbBtn=document.createElement('label'); 
       thumbBtn.className='btn secondary'; 
       thumbBtn.textContent='Set Thumbnail'; 
@@ -284,71 +285,6 @@ async function renderAll(){
   filesCache = all.sort((a,b)=> (b.uploadedAt||'').localeCompare(a.uploadedAt||''));
   handleChunkRender();
 }
-
-// Upload logic with loading/progress for large files
-async function handleUpload(f){ 
-  if(!f) return; 
-  if(!(f.name.endsWith('.mcpack')||f.name.endsWith('.mcworld'))){ 
-    showMsg('Only .mcpack or .mcworld allowed'); 
-    return; 
-  }
-  const reader=new FileReader();
-  const progress=document.getElementById('progressBar');
-  const fill=document.getElementById('progressFill');
-  // Show overlay for files > 5MB
-  const LARGE_FILE = 5*1024*1024;
-  let useOverlay = f.size > LARGE_FILE;
-  if(useOverlay) showLoading(0); else progress.style.display='block';
-  reader.onprogress=e=>{
-    if(e.lengthComputable){
-      let percent = Math.round(e.loaded/e.total*100);
-      if(useOverlay) document.getElementById('loadingPercent').textContent = percent+'%';
-      else fill.style.width=(percent)+'%';
-    }
-  };
-  reader.onload=async()=>{
-    const blob=new Blob([reader.result],{type:f.type||'application/octet-stream'});
-    const obj={id:Date.now().toString()+Math.random().toString(36).slice(2), name:f.name, blob, uploadedAt:new Date().toISOString(), thumb:null};
-    await putFile(obj);
-    if(useOverlay) hideLoading(); else {progress.style.display='none'; fill.style.width='0%';}
-    showMsg('Uploaded: '+f.name); renderAll();
-  };
-  reader.onerror = ()=>{
-    if(useOverlay) hideLoading(); else {progress.style.display='none'; fill.style.width='0%';}
-    showMsg('Error uploading file');
-  };
-  reader.readAsArrayBuffer(f);
-}
-
-// UI bindings
-const uploadBtn=document.getElementById('uploadBtn');
-const fileInput=document.getElementById('fileInput');
-uploadBtn.addEventListener('click', ()=> fileInput.click());
-fileInput.addEventListener('change', e=>{
-  if(e.target.files.length>0){
-    let files = Array.from(e.target.files);
-    let i=0;
-    function next(){
-      if(i>=files.length) return;
-      handleUpload(files[i]).then(()=>{i++; next();});
-    }
-    next();
-  }
-});
-
-const dz=document.getElementById('dropZone');
-dz.ondragover = e=>{ e.preventDefault(); dz.style.background='#333'; };
-dz.ondragleave = ()=>dz.style.background='';
-dz.ondrop = e=>{
-  e.preventDefault(); dz.style.background='';
-  let files = Array.from(e.dataTransfer.files);
-  let i=0;
-  function next(){
-    if(i>=files.length) return;
-    handleUpload(files[i]).then(()=>{i++; next();});
-  }
-  next();
-};
 
 document.getElementById('searchInput').oninput = ()=>{
   clearTimeout(window._searchTimeout);
