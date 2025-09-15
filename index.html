@@ -1,2587 +1,363 @@
-<!DOCTYPE html>
+<!doctype html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Periodic Table Buttons</title>
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    color: #fff;
-    margin: 0;
-    padding: 20px;
-    text-align: center;
-}
-h1 {
-    margin-bottom: 20px;
-}
-#buttons-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 10px;
-    justify-items: center;
-    max-width: 1000px;
-    margin: 0 auto 40px auto;
-}
-
-/* Textured buttons */
-.element-button {
-    background: linear-gradient(145deg, #4a90e2, #357ABD);
-    border: 2px solid #fff;
-    border-radius: 15px;
-    padding: 15px;
-    cursor: pointer;
-    transition: transform 0.3s, box-shadow 0.3s;
-    color: #fff;
-    font-weight: bold;
-    width: 80px;
-    height: 80px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-}
-.element-button:hover {
-    transform: scale(1.2);
-    box-shadow: 4px 4px 20px rgba(0,0,0,0.7);
-}
-.symbol { font-size: 18px; }
-.number { font-size: 12px; }
-
-/* Modal styles */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: rgba(0,0,0,0.85);
-    justify-content: center;
-    align-items: center;
-    overflow-y: auto;
-    padding: 20px;
-    box-sizing: border-box;
-}
-.modal-content {
-    background: rgba(255,255,255,0.1);
-    padding: 20px;
-    border-radius: 15px;
-    max-width: 600px;
-    width: 100%;
-    text-align: center;
-    animation: fadeIn 0.5s;
-}
-.modal img {
-    width: 150px;
-    margin: 15px 0;
-    animation: float 3s ease-in-out infinite;
-}
-.close {
-    position: absolute;
-    top: 10px; right: 20px;
-    font-size: 24px;
-    cursor: pointer;
-    color: #fff;
-}
-@keyframes fadeIn { from {opacity:0;} to{opacity:1;} }
-@keyframes float {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-15px); }
-}
-.details p { margin: 5px 0; text-align: left; }
-.subsection { margin-top: 15px; font-weight: bold; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Minecraft File Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #7f5af0;
+      --background: #18181b;
+      --surface: #232338;
+      --accent: #5ffbf1;
+      --danger: #ff5470;
+      --success: #36f09f;
+      font-family: 'Montserrat', system-ui,Segoe UI,Roboto,Arial;
+      color: #f8fafc;
+      font-size: 16px;
+    }
+    html, body { margin:0; padding:0; min-height:100vh; background: linear-gradient(120deg, #232338 0%, #7f5af0 100%); }
+    body { display:flex; flex-direction:column; min-height:100vh; }
+    header { display:flex; justify-content:space-between; padding:20px; background:var(--surface); color:#fff; }
+    header h1 { margin:0; font-size:2rem; background:linear-gradient(90deg,#5ffbf1,#7f5af0); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .container { flex:1; display:flex; flex-direction:column; padding:50px; max-width:700px; margin:auto; gap:12px; }
+    .btn { background:linear-gradient(90deg,#7f5af0,#5ffbf1); color:#fff; padding:8px 16px; border-radius:8px; border:0; cursor:pointer; font-weight:700; }
+    .btn.danger{background:linear-gradient(90deg,#ff5470,#ff96c0);} .btn.secondary{background:linear-gradient(90deg,#232338,#7f5af0); border:1px solid var(--accent);}
+    .files{
+      background:#232338; 
+      padding:12px; 
+      border-radius:12px; 
+      min-height:200px; 
+      max-height:660px; 
+      overflow-y:auto; 
+      overflow-x:hidden;
+      display:flex; 
+      flex-direction:column;
+      gap:0;
+    }
+    .chunk{
+      display:flex; 
+      flex-direction:column; 
+      min-width:0; 
+      border:none; 
+      background:none; 
+      vertical-align:top;
+      margin-bottom: 0;
+    }
+    .file{
+      display:flex; 
+      flex-direction:column;
+      align-items:center; 
+      justify-content: flex-start; 
+      padding:16px 0 10px 0; 
+      border-bottom:1px solid #333; 
+      position:relative;
+    }
+    .meta{
+      display:flex; 
+      align-items:center; 
+      gap:10px; 
+      margin-top: 10px;
+    }
+    .name{
+      font-weight:700; 
+      color:var(--accent);
+      word-break: break-all;
+      text-align:center;
+    }
+    .actions{display:flex; gap:6px; justify-content:center; margin-top:8px;}
+    .thumb{
+      width:200px; 
+      height:200px; 
+      object-fit:cover; 
+      border-radius:12px; 
+      border:3px solid var(--accent);
+      display:block;
+      margin:0 auto 6px auto;
+      background: #191925;
+    }
+    #dropZone{border:2px dashed var(--accent); padding:7px; text-align:; border-radius:10px; color:var(--accent);}
+    #progressBar{width:100%; height:8px; background:#333; border-radius:6px; margin-top:10px; display:none;} #progressFill{width:0%; height:100%; background:var(--accent); border-radius:6px;}
+    #msgBox{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--accent); color:#232338; padding:10px 20px; border-radius:10px; display:none; font-weight:700;}
+    .rename-box{display:flex; gap:6px; align-items:center;} 
+    .rename-input{padding:6px; border-radius:6px; border:1px solid #666; background:#18181b; color:#fff;}
+    #loadingOverlay {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(20,20,30,0.85);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    #loadingSpinner {
+      border: 6px solid #eee;
+      border-top: 6px solid var(--accent);
+      border-radius: 50%;
+      width: 60px; height: 60px;
+      animation: spin 0.9s linear infinite;
+      margin-bottom: 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    #loadingText {
+      color: var(--accent);
+      font-weight: bold;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+    .chunks-indicator {
+      color: #888;
+      text-align: center;
+      margin: 8px 8;
+      font-size: 0.95rem;
+      user-select: none;
+    }
+    .chunk-nav-btn { display: none !important; }
+  </style>
 </head>
 <body>
-
-<h1>Periodic Table</h1>
-<div id="buttons-container">
-  <!-- Buttons for elements -->
-<div class="element-button" data-symbol="H">
-    <div class="number">1</div>
-    <div class="symbol">H</div>
-  </div>
-  <div class="element-button" data-symbol="He">
-    <div class="number">2</div>
-    <div class="symbol">He</div>
-  </div>
-  <div class="element-button" data-symbol="Li">
-    <div class="number">3</div>
-    <div class="symbol">Li</div>
-  </div>
-  <div class="element-button" data-symbol="Be">
-    <div class="number">4</div>
-    <div class="symbol">Be</div>
-  </div>
-  <div class="element-button" data-symbol="B">
-    <div class="number">5</div>
-    <div class="symbol">B</div>
-  </div>
-  <div class="element-button" data-symbol="C">
-    <div class="number">6</div>
-    <div class="symbol">C</div>
-  </div>
-  <div class="element-button" data-symbol="N">
-    <div class="number">7</div>
-    <div class="symbol">N</div>
-  </div>
-  <div class="element-button" data-symbol="O">
-    <div class="number">8</div>
-    <div class="symbol">O</div>
-  </div>
-  <div class="element-button" data-symbol="F">
-    <div class="number">9</div>
-    <div class="symbol">F</div>
-  </div>
-  <div class="element-button" data-symbol="Ne">
-    <div class="number">10</div>
-    <div class="symbol">Ne</div>
-  </div>
-  <div class="element-button" data-symbol="Na">
-    <div class="number">11</div>
-    <div class="symbol">Na</div>
-  </div>
-  <div class="element-button" data-symbol="Mg">
-    <div class="number">12</div>
-    <div class="symbol">Mg</div>
-  </div>
-  <div class="element-button" data-symbol="Al">
-    <div class="number">13</div>
-    <div class="symbol">Al</div>
-  </div>
-  <div class="element-button" data-symbol="Si">
-    <div class="number">14</div>
-    <div class="symbol">Si</div>
-  </div>
-  <div class="element-button" data-symbol="P">
-    <div class="number">15</div>
-    <div class="symbol">P</div>
-  </div>
-  <div class="element-button" data-symbol="S">
-    <div class="number">16</div>
-    <div class="symbol">S</div>
-  </div>
-  <div class="element-button" data-symbol="Cl">
-    <div class="number">17</div>
-    <div class="symbol">Cl</div>
-  </div>
-  <div class="element-button" data-symbol="Ar">
-    <div class="number">18</div>
-    <div class="symbol">Ar</div>
-  </div>
-  <div class="element-button" data-symbol="K">
-    <div class="number">19</div>
-    <div class="symbol">K</div>
-  </div>
-  <div class="element-button" data-symbol="Ca">
-    <div class="number">20</div>
-    <div class="symbol">Ca</div>
-  </div>
-  <div class="element-button" data-symbol="Sc">
-    <div class="number">21</div>
-    <div class="symbol">Sc</div>
-  </div>
-  <div class="element-button" data-symbol="Ti">
-    <div class="number">22</div>
-    <div class="symbol">Ti</div>
-  </div>
-  <div class="element-button" data-symbol="V">
-    <div class="number">23</div>
-    <div class="symbol">V</div>
-  </div>
-  <div class="element-button" data-symbol="Cr">
-    <div class="number">24</div>
-    <div class="symbol">Cr</div>
-  </div>
-  <div class="element-button" data-symbol="Mn">
-    <div class="number">25</div>
-    <div class="symbol">Mn</div>
-  </div>
-  <div class="element-button" data-symbol="Fe">
-    <div class="number">26</div>
-    <div class="symbol">Fe</div>
-  </div>
-  <div class="element-button" data-symbol="Co">
-    <div class="number">27</div>
-    <div class="symbol">Co</div>
-  </div>
-  <div class="element-button" data-symbol="Ni">
-    <div class="number">28</div>
-    <div class="symbol">Ni</div>
-  </div>
-  <div class="element-button" data-symbol="Cu">
-    <div class="number">29</div>
-    <div class="symbol">Cu</div>
-  </div>
-  <div class="element-button" data-symbol="Zn">
-    <div class="number">30</div>
-    <div class="symbol">Zn</div>
-  </div>
-  <div class="element-button" data-symbol="Ga">
-    <div class="number">31</div>
-    <div class="symbol">Ga</div>
-  </div>
-  <div class="element-button" data-symbol="Ge">
-    <div class="number">32</div>
-    <div class="symbol">Ge</div>
-  </div>
-  <div class="element-button" data-symbol="As">
-    <div class="number">33</div>
-    <div class="symbol">As</div>
-  </div>
-  <div class="element-button" data-symbol="Se">
-    <div class="number">34</div>
-    <div class="symbol">Se</div>
-  </div>
-  <div class="element-button" data-symbol="Br">
-    <div class="number">35</div>
-    <div class="symbol">Br</div>
-  </div>
-  <div class="element-button" data-symbol="Kr">
-    <div class="number">36</div>
-    <div class="symbol">Kr</div>
-  </div>
-  <div class="element-button" data-symbol="Rb">
-    <div class="number">37</div>
-    <div class="symbol">Rb</div>
-  </div>
-  <div class="element-button" data-symbol="Sr">
-    <div class="number">38</div>
-    <div class="symbol">Sr</div>
-  </div>
-  <div class="element-button" data-symbol="Y">
-    <div class="number">39</div>
-    <div class="symbol">Y</div>
-  </div>
-  <div class="element-button" data-symbol="Zr">
-    <div class="number">40</div>
-    <div class="symbol">Zr</div>
-  </div>
-  <div class="element-button" data-symbol="Nb">
-    <div class="number">41</div>
-    <div class="symbol">Nb</div>
-  </div>
-  <div class="element-button" data-symbol="Mo">
-    <div class="number">42</div>
-    <div class="symbol">Mo</div>
-  </div>
-  <div class="element-button" data-symbol="Tc">
-    <div class="number">43</div>
-    <div class="symbol">Tc</div>
-  </div>
-  <div class="element-button" data-symbol="Ru">
-    <div class="number">44</div>
-    <div class="symbol">Ru</div>
-  </div>
-  <div class="element-button" data-symbol="Rh">
-    <div class="number">45</div>
-    <div class="symbol">Rh</div>
-  </div>
-  <div class="element-button" data-symbol="Pd">
-    <div class="number">46</div>
-    <div class="symbol">Pd</div>
-  </div>
-  <div class="element-button" data-symbol="Ag">
-    <div class="number">47</div>
-    <div class="symbol">Ag</div>
-  </div>
-  <div class="element-button" data-symbol="Cd">
-    <div class="number">48</div>
-    <div class="symbol">Cd</div>
-  </div>
-  <div class="element-button" data-symbol="In">
-    <div class="number">49</div>
-    <div class="symbol">In</div>
-  </div>
-  <div class="element-button" data-symbol="Sn">
-    <div class="number">50</div>
-    <div class="symbol">Sn</div>
-  </div>
-  <div class="element-button" data-symbol="Sb">
-    <div class="number">51</div>
-    <div class="symbol">Sb</div>
-  </div>
-  <div class="element-button" data-symbol="Te">
-    <div class="number">52</div>
-    <div class="symbol">Te</div>
-  </div>
-  <div class="element-button" data-symbol="I">
-    <div class="number">53</div>
-    <div class="symbol">I</div>
-  </div>
-  <div class="element-button" data-symbol="Xe">
-    <div class="number">54</div>
-    <div class="symbol">Xe</div>
-  </div>
-  <div class="element-button" data-symbol="Cs">
-    <div class="number">55</div>
-    <div class="symbol">Cs</div>
-  </div>
-  <div class="element-button" data-symbol="Ba">
-    <div class="number">56</div>
-    <div class="symbol">Ba</div>
-  </div>
-  <div class="element-button" data-symbol="La">
-    <div class="number">57</div>
-    <div class="symbol">La</div>
-  </div>
-  <div class="element-button" data-symbol="Ce">
-    <div class="number">58</div>
-    <div class="symbol">Ce</div>
-  </div>
-  <div class="element-button" data-symbol="Pr">
-    <div class="number">59</div>
-    <div class="symbol">Pr</div>
-  </div>
-  <div class="element-button" data-symbol="Nd">
-    <div class="number">60</div>
-    <div class="symbol">Nd</div>
-  </div>
-  <div class="element-button" data-symbol="Pm">
-    <div class="number">61</div>
-    <div class="symbol">Pm</div>
-  </div>
-  <div class="element-button" data-symbol="Sm">
-    <div class="number">62</div>
-    <div class="symbol">Sm</div>
-  </div>
-  <div class="element-button" data-symbol="Eu">
-    <div class="number">63</div>
-    <div class="symbol">Eu</div>
-  </div>
-  <div class="element-button" data-symbol="Gd">
-    <div class="number">64</div>
-    <div class="symbol">Gd</div>
-  </div>
-  <div class="element-button" data-symbol="Tb">
-    <div class="number">65</div>
-    <div class="symbol">Tb</div>
-  </div>
-  <div class="element-button" data-symbol="Dy">
-    <div class="number">66</div>
-    <div class="symbol">Dy</div>
-  </div>
-  <div class="element-button" data-symbol="Ho">
-    <div class="number">67</div>
-    <div class="symbol">Ho</div>
-  </div>
-  <div class="element-button" data-symbol="Er">
-    <div class="number">68</div>
-    <div class="symbol">Er</div>
-  </div>
-  <div class="element-button" data-symbol="Tm">
-    <div class="number">69</div>
-    <div class="symbol">Tm</div>
-  </div>
-  <div class="element-button" data-symbol="Yb">
-    <div class="number">70</div>
-    <div class="symbol">Yb</div>
-  </div>
-  <div class="element-button" data-symbol="Lu">
-    <div class="number">71</div>
-    <div class="symbol">Lu</div>
-  </div>
-  <div class="element-button" data-symbol="Hf">
-    <div class="number">72</div>
-    <div class="symbol">Hf</div>
-  </div>
-  <div class="element-button" data-symbol="Ta">
-    <div class="number">73</div>
-    <div class="symbol">Ta</div>
-  </div>
-  <div class="element-button" data-symbol="W">
-    <div class="number">74</div>
-    <div class="symbol">W</div>
-  </div>
-  <div class="element-button" data-symbol="Re">
-    <div class="number">75</div>
-    <div class="symbol">Re</div>
-  </div>
-  <div class="element-button" data-symbol="Os">
-    <div class="number">76</div>
-    <div class="symbol">Os</div>
-  </div>
-  <div class="element-button" data-symbol="Ir">
-    <div class="number">77</div>
-    <div class="symbol">Ir</div>
-  </div>
-  <div class="element-button" data-symbol="Pt">
-    <div class="number">78</div>
-    <div class="symbol">Pt</div>
-  </div>
-  <div class="element-button" data-symbol="Au">
-    <div class="number">79</div>
-    <div class="symbol">Au</div>
-  </div>
-  <div class="element-button" data-symbol="Hg">
-    <div class="number">80</div>
-    <div class="symbol">Hg</div>
-  </div>
-  <div class="element-button" data-symbol="Tl">
-    <div class="number">81</div>
-    <div class="symbol">Tl</div>
-  </div>
-  <div class="element-button" data-symbol="Pb">
-    <div class="number">82</div>
-    <div class="symbol">Pb</div>
-  </div>
-  <div class="element-button" data-symbol="Bi">
-    <div class="number">83</div>
-    <div class="symbol">Bi</div>
-  </div>
-  <div class="element-button" data-symbol="Po">
-    <div class="number">84</div>
-    <div class="symbol">Po</div>
-  </div>
-  <div class="element-button" data-symbol="At">
-    <div class="number">85</div>
-    <div class="symbol">At</div>
-  </div>
-  <div class="element-button" data-symbol="Rn">
-    <div class="number">86</div>
-    <div class="symbol">Rn</div>
-  </div>
-  <div class="element-button" data-symbol="Fr">
-    <div class="number">87</div>
-    <div class="symbol">Fr</div>
-  </div>
-  <div class="element-button" data-symbol="Ra">
-    <div class="number">88</div>
-    <div class="symbol">Ra</div>
-  </div>
-  <div class="element-button" data-symbol="Ac">
-    <div class="number">89</div>
-    <div class="symbol">Ac</div>
-  </div>
-  <div class="element-button" data-symbol="Th">
-    <div class="number">90</div>
-    <div class="symbol">Th</div>
-  </div>
-  <div class="element-button" data-symbol="Pa">
-    <div class="number">91</div>
-    <div class="symbol">Pa</div>
-  </div>
-  <div class="element-button" data-symbol="U">
-    <div class="number">92</div>
-    <div class="symbol">U</div>
-  </div>
-  <div class="element-button" data-symbol="Np">
-    <div class="number">93</div>
-    <div class="symbol">Np</div>
-  </div>
-  <div class="element-button" data-symbol="Pu">
-    <div class="number">94</div>
-    <div class="symbol">Pu</div>
-  </div>
-  <div class="element-button" data-symbol="Am">
-    <div class="number">95</div>
-    <div class="symbol">Am</div>
-  </div>
-  <div class="element-button" data-symbol="Cm">
-    <div class="number">96</div>
-    <div class="symbol">Cm</div>
-  </div>
-  <div class="element-button" data-symbol="Bk">
-    <div class="number">97</div>
-    <div class="symbol">Bk</div>
-  </div>
-  <div class="element-button" data-symbol="Cf">
-    <div class="number">98</div>
-    <div class="symbol">Cf</div>
-  </div>
-  <div class="element-button" data-symbol="Es">
-    <div class="number">99</div>
-    <div class="symbol">Es</div>
-  </div>
-  <div class="element-button" data-symbol="Fm">
-    <div class="number">100</div>
-    <div class="symbol">Fm</div>
-  </div>
-  <div class="element-button" data-symbol="Md">
-    <div class="number">101</div>
-    <div class="symbol">Md</div>
-  </div>
-  <div class="element-button" data-symbol="No">
-    <div class="number">102</div>
-    <div class="symbol">No</div>
-  </div>
-  <div class="element-button" data-symbol="Lr">
-    <div class="number">103</div>
-    <div class="symbol">Lr</div>
-  </div>
-  <div class="element-button" data-symbol="Rf">
-    <div class="number">104</div>
-    <div class="symbol">Rf</div>
-  </div>
-  <div class="element-button" data-symbol="Db">
-    <div class="number">105</div>
-    <div class="symbol">Db</div>
-  </div>
-  <div class="element-button" data-symbol="Sg">
-    <div class="number">106</div>
-    <div class="symbol">Sg</div>
-  </div>
-  <div class="element-button" data-symbol="Bh">
-    <div class="number">107</div>
-    <div class="symbol">Bh</div>
-  </div>
-  <div class="element-button" data-symbol="Hs">
-    <div class="number">108</div>
-    <div class="symbol">Hs</div>
-  </div>
-  <div class="element-button" data-symbol="Mt">
-    <div class="number">109</div>
-    <div class="symbol">Mt</div>
-  </div>
-  <div class="element-button" data-symbol="Ds">
-    <div class="number">110</div>
-    <div class="symbol">Ds</div>
-  </div>
-  <div class="element-button" data-symbol="Rg">
-    <div class="number">111</div>
-    <div class="symbol">Rg</div>
-  </div>
-  <div class="element-button" data-symbol="Cn">
-    <div class="number">112</div>
-    <div class="symbol">Cn</div>
-  </div>
-  <div class="element-button" data-symbol="Nh">
-    <div class="number">113</div>
-    <div class="symbol">Nh</div>
-  </div>
-  <div class="element-button" data-symbol="Fl">
-    <div class="number">114</div>
-    <div class="symbol">Fl</div>
-  </div>
-  <div class="element-button" data-symbol="Mc">
-    <div class="number">115</div>
-    <div class="symbol">Mc</div>
-  </div>
-  <div class="element-button" data-symbol="Lv">
-    <div class="number">116</div>
-    <div class="symbol">Lv</div>
-  </div>
-  <div class="element-button" data-symbol="Ts">
-    <div class="number">117</div>
-    <div class="symbol">Ts</div>
-  </div>
-  <div class="element-button" data-symbol="Og">
-    <div class="number">118</div>
-    <div class="symbol">Og</div>
-  </div>
-  <!-- Add more buttons for all elements -->
-</div>
-
-<!-- Modal for element details -->
-<div class="modal" id="element-modal">
-    <div class="modal-content">
-        <span class="close" id="modal-close">&times;</span>
-        <h1 id="element-name">Element Name</h1>
-        <img id="element-img" src="" alt="Element Image">
-        <div class="details" id="element-details"></div>
+  <header><h1>Minecraft Packs</h1></header>
+  <div class="container">
+    <div id="dropZone">Drag & Drop your .mcpack or .mcworld here<br>‌‌</div>
+    <button class="btn" id="uploadBtn">Upload</button>
+    <input type="file" id="fileInput" accept=".mcpack,.mcworld" style="display:none" multiple>
+    <input type="text" id="searchInput" placeholder="Search packs..." style="padding:8px; border-radius:6px; border:1px solid #666;">
+    <div id="progressBar"><div id="progressFill"></div></div>
+    <div class="chunks-indicator" id="chunksIndicator"></div>
+    <div style="text-align: center;">
+      <button class="chunk-nav-btn" id="prevChunkBtn" title="Previous Chunk">&#8678;</button>
+      <button class="chunk-nav-btn" id="nextChunkBtn" title="Next Chunk">&#8680;</button>
     </div>
-</div>
+    <div class="files" id="fileList"></div>
+  </div>
+  <div id="msgBox" aria-live="polite"></div>
+  <div id="loadingOverlay">
+    <div id="loadingSpinner"></div>
+    <div id="loadingText">Uploading... <span id="loadingPercent"></span></div>
+  </div>
+  <script>
+const DB_NAME='mc-file-manager-db'; const STORE='files'; let db;
+let filesCache=[]; let chunkSize = 6;
 
-<script>
-const elements = {
-    H: {
-        name: "Hydrogen",
-        atomicNumber: 1,
-        symbol: "H",
-        category: "Nonmetal",
-        atomicMass: "1.008 u",
-        density: "0.00008988 g/cm³",
-        meltingPoint: "14 K",
-        boilingPoint: "20 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Hydrogen_Sample.jpg/120px-Hydrogen_Sample.jpg",
-        forms: {
-            molecular: { description: "Diatomic H₂ gas, colorless, odorless, flammable.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Hydrogen_Sample.jpg/120px-Hydrogen_Sample.jpg" },
-            atomic: { description: "Single H atom, highly reactive, exists in plasma or high temperatures." },
-            ions: { description: "Proton H⁺ (acidic), Hydride H⁻ (reducing agent)." },
-            isotopes: { description: "Protium ¹H, Deuterium ²H, Tritium ³H." },
-            liquid: { description: "Liquid Hydrogen (LH₂) below 20 K, transparent, used as rocket fuel." },
-            solid: { description: "Solid Hydrogen under extreme cold and pressure, lab or planetary cores." }
-        }
-    },
-    He: {
-        name: "Helium",
-        atomicNumber: 2,
-        symbol: "He",
-        category: "Noble Gas",
-        atomicMass: "4.0026 u",
-        density: "0.0001786 g/cm³",
-        meltingPoint: "0.95 K",
-        boilingPoint: "4.22 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Helium_discharge_tube.jpg/120px-Helium_discharge_tube.jpg",
-        forms: {
-            molecular: { description: "Monoatomic He gas, inert, colorless.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Helium_discharge_tube.jpg/120px-Helium_discharge_tube.jpg" }
-        }
-    },
-    Li: {
-        name: "Lithium",
-        atomicNumber: 3,
-        symbol: "Li",
-        category: "Alkali Metal",
-        atomicMass: "6.94 u",
-        density: "0.534 g/cm³",
-        meltingPoint: "453.65 K",
-        boilingPoint: "1603 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Lithium_Sample.jpg/120px-Lithium_Sample.jpg",
-        forms: {
-            metallic: { description: "Soft, silvery-white metal, highly reactive.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Lithium_Sample.jpg/120px-Lithium_Sample.jpg" },
-            ionic: { description: "Li⁺ ion in compounds, used in batteries." }
-        }
-    },
-    Be: {
-        name: "Beryllium",
-        atomicNumber: 4,
-        symbol: "Be",
-        category: "Alkaline Earth Metal",
-        atomicMass: "9.0122 u",
-        density: "1.85 g/cm³",
-        meltingPoint: "1560 K",
-        boilingPoint: "2742 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Beryllium_Sample.jpg/120px-Beryllium_Sample.jpg",
-        forms: {
-            metallic: { description: "Hard, brittle, steel-gray metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Beryllium_Sample.jpg/120px-Beryllium_Sample.jpg" }
-        }
-    },
-    B: {
-        name: "Boron",
-        atomicNumber: 5,
-        symbol: "B",
-        category: "Metalloid",
-        atomicMass: "10.81 u",
-        density: "2.08 g/cm³",
-        meltingPoint: "2349 K",
-        boilingPoint: "4200 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Boron_Sample.jpg/120px-Boron_Sample.jpg",
-        forms: {
-            crystalline: { description: "Hard, dark crystalline solid.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Boron_Sample.jpg/120px-Boron_Sample.jpg" }
-        }
-    },
-    C: {
-        name: "Carbon",
-        atomicNumber: 6,
-        symbol: "C",
-        category: "Nonmetal",
-        atomicMass: "12.011 u",
-        density: "2.267 g/cm³",
-        meltingPoint: "3823 K",
-        boilingPoint: "4300 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Diamond_and_graphite2.jpg/120px-Diamond_and_graphite2.jpg",
-        forms: {
-            diamond: { description: "Hardest natural substance, transparent crystals.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Diamond_and_graphite2.jpg/120px-Diamond_and_graphite2.jpg" },
-            graphite: { description: "Soft, black, conducts electricity." },
-            amorphous: { description: "Coal, charcoal, carbon black." }
-        }
-    },
-    N: {
-        name: "Nitrogen",
-        atomicNumber: 7,
-        symbol: "N",
-        category: "Nonmetal",
-        atomicMass: "14.007 u",
-        density: "0.0012506 g/cm³",
-        meltingPoint: "63.15 K",
-        boilingPoint: "77.36 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Liquid_nitrogen.jpg/120px-Liquid_nitrogen.jpg",
-        forms: {
-            diatomic: { description: "N₂ gas, colorless, odorless, inert.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Liquid_nitrogen.jpg/120px-Liquid_nitrogen.jpg" },
-            liquid: { description: "Liquid nitrogen, extremely cold cryogenic fluid." }
-        }
-    },
-    O: {
-        name: "Oxygen",
-        atomicNumber: 8,
-        symbol: "O",
-        category: "Nonmetal",
-        atomicMass: "15.999 u",
-        density: "0.001429 g/cm³",
-        meltingPoint: "54.36 K",
-        boilingPoint: "90.20 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Liquid_oxygen.jpg/120px-Liquid_oxygen.jpg",
-        forms: {
-            diatomic: { description: "O₂ gas, colorless, odorless, supports combustion.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Liquid_oxygen.jpg/120px-Liquid_oxygen.jpg" },
-            ozone: { description: "O₃, pale blue gas, strong oxidizer." }
-        }
-    },
-    F: {
-        name: "Fluorine",
-        atomicNumber: 9,
-        symbol: "F",
-        category: "Halogen",
-        atomicMass: "18.998 u",
-        density: "0.001696 g/cm³",
-        meltingPoint: "53.53 K",
-        boilingPoint: "85.03 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Fluorine_gas.jpg/120px-Fluorine_gas.jpg",
-        forms: {
-            diatomic: { description: "F₂ gas, pale yellow, extremely reactive.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Fluorine_gas.jpg/120px-Fluorine_gas.jpg" }
-        }
-    },
-    Ne: {
-        name: "Neon",
-        atomicNumber: 10,
-        symbol: "Ne",
-        category: "Noble Gas",
-        atomicMass: "20.180 u",
-        density: "0.0008999 g/cm³",
-        meltingPoint: "24.56 K",
-        boilingPoint: "27.07 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Neon_discharge_tube.jpg/120px-Neon_discharge_tube.jpg",
-        forms: {
-            monoatomic: { description: "Inert gas, orange-red glow in discharge tubes.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Neon_discharge_tube.jpg/120px-Neon_discharge_tube.jpg" }
-        }
-    },
-    Na: {
-        name: "Sodium",
-        atomicNumber: 11,
-        symbol: "Na",
-        category: "Alkali Metal",
-        atomicMass: "22.990 u",
-        density: "0.971 g/cm³",
-        meltingPoint: "370.87 K",
-        boilingPoint: "1156 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Na_%28Sodium%29.jpg/120px-Na_%28Sodium%29.jpg",
-        forms: {
-            metallic: { description: "Soft, silvery-white metal, highly reactive with water.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Na_%28Sodium%29.jpg/120px-Na_%28Sodium%29.jpg" }
-        }
-    },
-    Mg: {
-        name: "Magnesium",
-        atomicNumber: 12,
-        symbol: "Mg",
-        category: "Alkaline Earth Metal",
-        atomicMass: "24.305 u",
-        density: "1.738 g/cm³",
-        meltingPoint: "923 K",
-        boilingPoint: "1363 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Magnesium_Sample.jpg/120px-Magnesium_Sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-white metal, burns with bright white light.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1e/Magnesium_Sample.jpg/120px-Magnesium_Sample.jpg" }
-        }
-    },
-    Al: {
-        name: "Aluminum",
-        atomicNumber: 13,
-        symbol: "Al",
-        category: "Post-Transition Metal",
-        atomicMass: "26.982 u",
-        density: "2.70 g/cm³",
-        meltingPoint: "933.47 K",
-        boilingPoint: "2792 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Aluminium-4.jpg/120px-Aluminium-4.jpg",
-        forms: {
-            metallic: { description: "Silvery-white, lightweight, corrosion-resistant.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Aluminium-4.jpg/120px-Aluminium-4.jpg" }
-        }
-    },
-    Si: {
-        name: "Silicon",
-        atomicNumber: 14,
-        symbol: "Si",
-        category: "Metalloid",
-        atomicMass: "28.085 u",
-        density: "2.3296 g/cm³",
-        meltingPoint: "1687 K",
-        boilingPoint: "3538 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/SiliconCroda.jpg/120px-SiliconCroda.jpg",
-        forms: {
-            crystalline: { description: "Dark gray, metallic luster, semiconductor.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/SiliconCroda.jpg/120px-SiliconCroda.jpg" }
-        }
-    },
-    P: {
-        name: "Phosphorus",
-        atomicNumber: 15,
-        symbol: "P",
-        category: "Nonmetal",
-        atomicMass: "30.974 u",
-        density: "1.82 g/cm³",
-        meltingPoint: "317.30 K",
-        boilingPoint: "553.65 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Red_and_white_phosphorus.jpg/120px-Red_and_white_phosphorus.jpg",
-        forms: {
-            white: { description: "Waxy white solid, highly reactive and toxic.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Red_and_white_phosphorus.jpg/120px-Red_and_white_phosphorus.jpg" },
-            red: { description: "Red powder, less reactive than white phosphorus." }
-        }
-    },
-    S: {
-        name: "Sulfur",
-        atomicNumber: 16,
-        symbol: "S",
-        category: "Nonmetal",
-        atomicMass: "32.06 u",
-        density: "2.067 g/cm³",
-        meltingPoint: "388.36 K",
-        boilingPoint: "717.87 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Sulfur_sample.jpg/120px-Sulfur_sample.jpg",
-        forms: {
-            crystalline: { description: "Bright yellow crystals, distinctive odor when burned.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Sulfur_sample.jpg/120px-Sulfur_sample.jpg" }
-        }
-    },
-    Cl: {
-        name: "Chlorine",
-        atomicNumber: 17,
-        symbol: "Cl",
-        category: "Halogen",
-        atomicMass: "35.45 u",
-        density: "0.003214 g/cm³",
-        meltingPoint: "171.6 K",
-        boilingPoint: "239.11 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Chlorine_gas.jpg/120px-Chlorine_gas.jpg",
-        forms: {
-            diatomic: { description: "Cl₂ gas, yellow-green, pungent odor, toxic.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Chlorine_gas.jpg/120px-Chlorine_gas.jpg" }
-        }
-    },
-    Ar: {
-        name: "Argon",
-        atomicNumber: 18,
-        symbol: "Ar",
-        category: "Noble Gas",
-        atomicMass: "39.948 u",
-        density: "0.0017837 g/cm³",
-        meltingPoint: "83.80 K",
-        boilingPoint: "87.30 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Argon_discharge_tube.jpg/120px-Argon_discharge_tube.jpg",
-        forms: {
-            monoatomic: { description: "Inert gas, colorless, blue-violet glow in discharge.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Argon_discharge_tube.jpg/120px-Argon_discharge_tube.jpg" }
-        }
-    },
-    K: {
-        name: "Potassium",
-        atomicNumber: 19,
-        symbol: "K",
-        category: "Alkali Metal",
-        atomicMass: "39.098 u",
-        density: "0.89 g/cm³",
-        meltingPoint: "336.53 K",
-        boilingPoint: "1032 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Potassium_Sample.jpg/120px-Potassium_Sample.jpg",
-        forms: {
-            metallic: { description: "Soft, silvery-white metal, extremely reactive.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Potassium_Sample.jpg/120px-Potassium_Sample.jpg" }
-        }
-    },
-    Ca: {
-        name: "Calcium",
-        atomicNumber: 20,
-        symbol: "Ca",
-        category: "Alkaline Earth Metal",
-        atomicMass: "40.078 u",
-        density: "1.54 g/cm³",
-        meltingPoint: "1115 K",
-        boilingPoint: "1757 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Calcium_unter_Argon_Schutzgasatmosph%C3%A4re.jpg/120px-Calcium_unter_Argon_Schutzgasatmosph%C3%A4re.jpg",
-        forms: {
-            metallic: { description: "Silvery-white metal, reactive with water.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/96/Calcium_unter_Argon_Schutzgasatmosph%C3%A4re.jpg/120px-Calcium_unter_Argon_Schutzgasatmosph%C3%A4re.jpg" }
-        }
-    },
-    Sc: {
-        name: "Scandium",
-        atomicNumber: 21,
-        symbol: "Sc",
-        category: "Transition Metal",
-        atomicMass: "44.956 u",
-        density: "2.99 g/cm³",
-        meltingPoint: "1814 K",
-        boilingPoint: "3109 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Scandium_Sample.jpg/120px-Scandium_Sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-white metal, lightweight, expensive.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Scandium_Sample.jpg/120px-Scandium_Sample.jpg" }
-        }
-    },
-    Ti: {
-        name: "Titanium",
-        atomicNumber: 22,
-        symbol: "Ti",
-        category: "Transition Metal",
-        atomicMass: "47.867 u",
-        density: "4.5 g/cm³",
-        meltingPoint: "1941 K",
-        boilingPoint: "3560 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Titanium-sample.jpg/120px-Titanium-sample.jpg",
-        forms: {
-            metallic: { description: "Strong, lightweight, corrosion-resistant metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Titanium-sample.jpg/120px-Titanium-sample.jpg" }
-        }
-    },
-    V: {
-        name: "Vanadium",
-        atomicNumber: 23,
-        symbol: "V",
-        category: "Transition Metal",
-        atomicMass: "50.942 u",
-        density: "6.0 g/cm³",
-        meltingPoint: "2183 K",
-        boilingPoint: "3680 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Vanadium_sample.jpg/120px-Vanadium_sample.jpg",
-        forms: {
-            metallic: { description: "Hard, silvery-gray metal, used in steel alloys.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Vanadium_sample.jpg/120px-Vanadium_sample.jpg" }
-        }
-    },
-    Cr: {
-        name: "Chromium",
-        atomicNumber: 24,
-        symbol: "Cr",
-        category: "Transition Metal",
-        atomicMass: "51.996 u",
-        density: "7.15 g/cm³",
-        meltingPoint: "2180 K",
-        boilingPoint: "2944 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Chromium_sample.jpg/120px-Chromium_sample.jpg",
-        forms: {
-            metallic: { description: "Hard, shiny, steel-gray metal, corrosion-resistant.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Chromium_sample.jpg/120px-Chromium_sample.jpg" }
-        }
-    },
-    Mn: {
-        name: "Manganese",
-        atomicNumber: 25,
-        symbol: "Mn",
-        category: "Transition Metal",
-        atomicMass: "54.938 u",
-        density: "7.21 g/cm³",
-        meltingPoint: "1519 K",
-        boilingPoint: "2334 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Manganese_Sample.jpg/120px-Manganese_Sample.jpg",
-        forms: {
-            metallic: { description: "Hard, brittle, silvery-gray metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Manganese_Sample.jpg/120px-Manganese_Sample.jpg" }
-        }
-    },
-    Fe: {
-        name: "Iron",
-        atomicNumber: 26,
-        symbol: "Fe",
-        category: "Transition Metal",
-        atomicMass: "55.845 u",
-        density: "7.874 g/cm³",
-        meltingPoint: "1811 K",
-        boilingPoint: "3134 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Iron_electrolytic_and_1cm3_cube.jpg/120px-Iron_electrolytic_and_1cm3_cube.jpg",
-        forms: {
-            metallic: { description: "Silvery-gray metal, magnetic, rusts in air.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Iron_electrolytic_and_1cm3_cube.jpg/120px-Iron_electrolytic_and_1cm3_cube.jpg" }
-        }
-    },
-    Co: {
-        name: "Cobalt",
-        atomicNumber: 27,
-        symbol: "Co",
-        category: "Transition Metal",
-        atomicMass: "58.933 u",
-        density: "8.86 g/cm³",
-        meltingPoint: "1768 K",
-        boilingPoint: "3200 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Cobalt_sample.jpg/120px-Cobalt_sample.jpg",
-        forms: {
-            metallic: { description: "Hard, lustrous, silver-gray metal, magnetic.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Cobalt_sample.jpg/120px-Cobalt_sample.jpg" }
-        }
-    },
-    Ni: {
-        name: "Nickel",
-        atomicNumber: 28,
-        symbol: "Ni",
-        category: "Transition Metal",
-        atomicMass: "58.693 u",
-        density: "8.912 g/cm³",
-        meltingPoint: "1728 K",
-        boilingPoint: "3186 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Nickel_chunk.jpg/120px-Nickel_chunk.jpg",
-        forms: {
-            metallic: { description: "Silvery-white metal, corrosion-resistant, magnetic.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Nickel_chunk.jpg/120px-Nickel_chunk.jpg" }
-        }
-    },
-    Cu: {
-        name: "Copper",
-        atomicNumber: 29,
-        symbol: "Cu",
-        category: "Transition Metal",
-        atomicMass: "63.546 u",
-        density: "8.933 g/cm³",
-        meltingPoint: "1357.77 K",
-        boilingPoint: "2835 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/NatCopper.jpg/120px-NatCopper.jpg",
-        forms: {
-            metallic: { description: "Reddish-orange metal, excellent conductor.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/NatCopper.jpg/120px-NatCopper.jpg" }
-        }
-    },
-    Zn: {
-        name: "Zinc",
-        atomicNumber: 30,
-        symbol: "Zn",
-        category: "Transition Metal",
-        atomicMass: "65.38 u",
-        density: "7.134 g/cm³",
-        meltingPoint: "692.68 K",
-        boilingPoint: "1180 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Zinc_fragment.jpg/120px-Zinc_fragment.jpg",
-        forms: {
-            metallic: { description: "Bluish-white metal, corrosion-resistant coating.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Zinc_fragment.jpg/120px-Zinc_fragment.jpg" }
-        }
-    },
-    Ga: {
-        name: "Gallium",
-        atomicNumber: 31,
-        symbol: "Ga",
-        category: "Post-Transition Metal",
-        atomicMass: "69.723 u",
-        density: "5.91 g/cm³",
-        meltingPoint: "302.91 K",
-        boilingPoint: "2477 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Gallium1_crop.jpg/120px-Gallium1_crop.jpg",
-        forms: {
-            metallic: { description: "Silvery metal, melts in hand, liquid at room temp.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Gallium1_crop.jpg/120px-Gallium1_crop.jpg" }
-        }
-    },
-    Ge: {
-        name: "Germanium",
-        atomicNumber: 32,
-        symbol: "Ge",
-        category: "Metalloid",
-        atomicMass: "72.630 u",
-        density: "5.323 g/cm³",
-        meltingPoint: "1211.40 K",
-        boilingPoint: "3106 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Polycrystalline-germanium.jpg/120px-Polycrystalline-germanium.jpg",
-        forms: {
-            crystalline: { description: "Grayish-white metalloid, semiconductor.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Polycrystalline-germanium.jpg/120px-Polycrystalline-germanium.jpg" }
-        }
-    },
-    As: {
-        name: "Arsenic",
-        atomicNumber: 33,
-        symbol: "As",
-        category: "Metalloid",
-        atomicMass: "74.922 u",
-        density: "5.776 g/cm³",
-        meltingPoint: "1090 K",
-        boilingPoint: "887 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Arsenic_1a.jpg/120px-Arsenic_1a.jpg",
-        forms: {
-            metallic: { description: "Gray arsenic, metallic form, brittle.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Arsenic_1a.jpg/120px-Arsenic_1a.jpg" },
-            yellow: { description: "Yellow arsenic, molecular form, toxic." }
-        }
-    },
-    Se: {
-        name: "Selenium",
-        atomicNumber: 34,
-        symbol: "Se",
-        category: "Nonmetal",
-        atomicMass: "78.971 u",
-        density: "4.809 g/cm³",
-        meltingPoint: "453 K",
-        boilingPoint: "958 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Selenium_1.jpg/120px-Selenium_1.jpg",
-        forms: {
-            crystalline: { description: "Red or gray selenium, photoconductive.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Selenium_1.jpg/120px-Selenium_1.jpg" }
-        }
-    },
-    Br: {
-        name: "Bromine",
-        atomicNumber: 35,
-        symbol: "Br",
-        category: "Halogen",
-        atomicMass: "79.904 u",
-        density: "3.1028 g/cm³",
-        meltingPoint: "265.8 K",
-        boilingPoint: "332.0 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Bromine_sample.jpg/120px-Bromine_sample.jpg",
-        forms: {
-            liquid: { description: "Dark red-brown liquid, volatile, toxic.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Bromine_sample.jpg/120px-Bromine_sample.jpg" }
-        }
-    },
-    Kr: {
-        name: "Krypton",
-        atomicNumber: 36,
-        symbol: "Kr",
-        category: "Noble Gas",
-        atomicMass: "83.798 u",
-        density: "0.003733 g/cm³",
-        meltingPoint: "115.79 K",
-        boilingPoint: "119.93 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Krypton_discharge_tube.jpg/120px-Krypton_discharge_tube.jpg",
-        forms: {
-            monoatomic: { description: "Inert gas, colorless, white glow in discharge.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Krypton_discharge_tube.jpg/120px-Krypton_discharge_tube.jpg" }
-        }
-    },
-    Rb: {
-        name: "Rubidium",
-        atomicNumber: 37,
-        symbol: "Rb",
-        category: "Alkali Metal",
-        atomicMass: "85.468 u",
-        density: "1.532 g/cm³",
-        meltingPoint: "312.46 K",
-        boilingPoint: "961 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Rubidium_sample.jpg/120px-Rubidium_sample.jpg",
-        forms: {
-            metallic: { description: "Soft, silvery-white metal, highly reactive.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Rubidium_sample.jpg/120px-Rubidium_sample.jpg" }
-        }
-    },
-    Sr: {
-        name: "Strontium",
-        atomicNumber: 38,
-        symbol: "Sr",
-        category: "Alkaline Earth Metal",
-        atomicMass: "87.62 u",
-        density: "2.64 g/cm³",
-        meltingPoint: "1050 K",
-        boilingPoint: "1655 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Strontium_destilled_crystals.jpg/120px-Strontium_destilled_crystals.jpg",
-        forms: {
-            metallic: { description: "Silvery-white metal, burns with red flame.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Strontium_destilled_crystals.jpg/120px-Strontium_destilled_crystals.jpg" }
-        }
-    },
-    Y: {
-        name: "Yttrium",
-        atomicNumber: 39,
-        symbol: "Y",
-        category: "Transition Metal",
-        atomicMass: "88.906 u",
-        density: "4.472 g/cm³",
-        meltingPoint: "1799 K",
-        boilingPoint: "3609 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Yttrium_sample.jpg/120px-Yttrium_sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-metallic, rare earth element.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Yttrium_sample.jpg/120px-Yttrium_sample.jpg" }
-        }
-    },
-    Zr: {
-        name: "Zirconium",
-        atomicNumber: 40,
-        symbol: "Zr",
-        category: "Transition Metal",
-        atomicMass: "91.224 u",
-        density: "6.52 g/cm³",
-        meltingPoint: "2128 K",
-        boilingPoint: "4682 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Zirconium_sample.jpg/120px-Zirconium_sample.jpg",
-        forms: {
-            metallic: { description: "Lustrous, gray-white, strong metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Zirconium_sample.jpg/120px-Zirconium_sample.jpg" }
-        }
-    },
-    Nb: {
-        name: "Niobium",
-        atomicNumber: 41,
-        symbol: "Nb",
-        category: "Transition Metal",
-        atomicMass: "92.906 u",
-        density: "8.57 g/cm³",
-        meltingPoint: "2750 K",
-        boilingPoint: "5017 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Niobium_sample.jpg/120px-Niobium_sample.jpg",
-        forms: {
-            metallic: { description: "Gray, crystalline, ductile metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Niobium_sample.jpg/120px-Niobium_sample.jpg" }
-        }
-    },
-    Mo: {
-        name: "Molybdenum",
-        atomicNumber: 42,
-        symbol: "Mo",
-        category: "Transition Metal",
-        atomicMass: "95.95 u",
-        density: "10.22 g/cm³",
-        meltingPoint: "2896 K",
-        boilingPoint: "4912 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Molybdenum_sample.jpg/120px-Molybdenum_sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-white, hard, refractory metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Molybdenum_sample.jpg/120px-Molybdenum_sample.jpg" }
-        }
-    },
-    Tc: {
-        name: "Technetium",
-        atomicNumber: 43,
-        symbol: "Tc",
-        category: "Transition Metal",
-        atomicMass: "98 u",
-        density: "11.5 g/cm³",
-        meltingPoint: "2430 K",
-        boilingPoint: "4538 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Tc-99m-sample.jpg/120px-Tc-99m-sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-gray, radioactive metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Tc-99m-sample.jpg/120px-Tc-99m-sample.jpg" }
-        }
-    },
-    Ru: {
-        name: "Ruthenium",
-        atomicNumber: 44,
-        symbol: "Ru",
-        category: "Transition Metal",
-        atomicMass: "101.07 u",
-        density: "12.37 g/cm³",
-        meltingPoint: "2607 K",
-        boilingPoint: "4423 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Ruthenium_sample.jpg/120px-Ruthenium_sample.jpg",
-        forms: {
-            metallic: { description: "Hard, white metal, corrosion-resistant.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Ruthenium_sample.jpg/120px-Ruthenium_sample.jpg" }
-        }
-    },
-    Rh: {
-        name: "Rhodium",
-        atomicNumber: 45,
-        symbol: "Rh",
-        category: "Transition Metal",
-        atomicMass: "102.91 u",
-        density: "12.41 g/cm³",
-        meltingPoint: "2237 K",
-        boilingPoint: "3968 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Rhodium_sample.jpg/120px-Rhodium_sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-white, hard, rare metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/Rhodium_sample.jpg/120px-Rhodium_sample.jpg" }
-        }
-    },
-    Pd: {
-        name: "Palladium",
-        atomicNumber: 46,
-        symbol: "Pd",
-        category: "Transition Metal",
-        atomicMass: "106.42 u",
-        density: "12.02 g/cm³",
-        meltingPoint: "1828.05 K",
-        boilingPoint: "3236 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Palladium_sample.jpg/120px-Palladium_sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-white, ductile, absorbs hydrogen.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Palladium_sample.jpg/120px-Palladium_sample.jpg" }
-        }
-    },
-    Ag: {
-        name: "Silver",
-        atomicNumber: 47,
-        symbol: "Ag",
-        category: "Transition Metal",
-        atomicMass: "107.87 u",
-        density: "10.501 g/cm³",
-        meltingPoint: "1234.93 K",
-        boilingPoint: "2435 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Silver_sample.jpg/120px-Silver_sample.jpg",
-        forms: {
-            metallic: { description: "Lustrous white metal, best electrical conductor.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Silver_sample.jpg/120px-Silver_sample.jpg" }
-        }
-    },
-    Cd: {
-        name: "Cadmium",
-        atomicNumber: 48,
-        symbol: "Cd",
-        category: "Transition Metal",
-        atomicMass: "112.41 u",
-        density: "8.69 g/cm³",
-        meltingPoint: "594.22 K",
-        boilingPoint: "1040 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Cadmium-sample.jpg/120px-Cadmium-sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-blue metal, toxic, used in batteries.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Cadmium-sample.jpg/120px-Cadmium-sample.jpg" }
-        }
-    },
-    In: {
-        name: "Indium",
-        atomicNumber: 49,
-        symbol: "In",
-        category: "Post-Transition Metal",
-        atomicMass: "114.82 u",
-        density: "7.31 g/cm³",
-        meltingPoint: "429.75 K",
-        boilingPoint: "2345 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Indium.jpg/120px-Indium.jpg",
-        forms: {
-            metallic: { description: "Soft, silvery-white metal, very malleable.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Indium.jpg/120px-Indium.jpg" }
-        }
-    },
-    Sn: {
-        name: "Tin",
-        atomicNumber: 50,
-        symbol: "Sn",
-        category: "Post-Transition Metal",
-        atomicMass: "118.71 u",
-        density: "7.287 g/cm³",
-        meltingPoint: "505.08 K",
-        boilingPoint: "2875 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Tin_sample.jpg/120px-Tin_sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-white metal, malleable, resists corrosion.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Tin_sample.jpg/120px-Tin_sample.jpg" }
-        }
-    },
-    Sb: {
-        name: "Antimony",
-        atomicNumber: 51,
-        symbol: "Sb",
-        category: "Metalloid",
-        atomicMass: "121.76 u",
-        density: "6.685 g/cm³",
-        meltingPoint: "903.78 K",
-        boilingPoint: "1860 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Antimony-sample.jpg/120px-Antimony-sample.jpg",
-        forms: {
-            metallic: { description: "Lustrous gray metalloid, brittle, toxic.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Antimony-sample.jpg/120px-Antimony-sample.jpg" }
-        }
-    },
-    Te: {
-        name: "Tellurium",
-        atomicNumber: 52,
-        symbol: "Te",
-        category: "Metalloid",
-        atomicMass: "127.60 u",
-        density: "6.232 g/cm³",
-        meltingPoint: "722.66 K",
-        boilingPoint: "1261 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Tellurium_sample.jpg/120px-Tellurium_sample.jpg",
-        forms: {
-            crystalline: { description: "Silvery-white, brittle metalloid.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Tellurium_sample.jpg/120px-Tellurium_sample.jpg" }
-        }
-    },
-    I: {
-        name: "Iodine",
-        atomicNumber: 53,
-        symbol: "I",
-        category: "Halogen",
-        atomicMass: "126.90 u",
-        density: "4.933 g/cm³",
-        meltingPoint: "386.85 K",
-        boilingPoint: "457.4 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Iodine_sample.jpg/120px-Iodine_sample.jpg",
-        forms: {
-            solid: { description: "Dark violet crystals, sublimes to purple vapor.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Iodine_sample.jpg/120px-Iodine_sample.jpg" }
-        }
-    },
-    Xe: {
-        name: "Xenon",
-        atomicNumber: 54,
-        symbol: "Xe",
-        category: "Noble Gas",
-        atomicMass: "131.29 u",
-        density: "0.005887 g/cm³",
-        meltingPoint: "161.40 K",
-        boilingPoint: "165.03 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Xenon_discharge_tube.jpg/120px-Xenon_discharge_tube.jpg",
-        forms: {
-            monoatomic: { description: "Heavy noble gas, blue glow in discharge.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Xenon_discharge_tube.jpg/120px-Xenon_discharge_tube.jpg" }
-        }
-    },
-    Cs: {
-        name: "Cesium",
-        atomicNumber: 55,
-        symbol: "Cs",
-        category: "Alkali Metal",
-        atomicMass: "132.91 u",
-        density: "1.873 g/cm³",
-        meltingPoint: "301.59 K",
-        boilingPoint: "944 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Cesium_sample.jpg/120px-Cesium_sample.jpg",
-        forms: {
-            metallic: { description: "Soft, golden-colored metal, extremely reactive.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Cesium_sample.jpg/120px-Cesium_sample.jpg" }
-        }
-    },
-    Ba: {
-        name: "Barium",
-        atomicNumber: 56,
-        symbol: "Ba",
-        category: "Alkaline Earth Metal",
-        atomicMass: "137.33 u",
-        density: "3.594 g/cm³",
-        meltingPoint: "1000 K",
-        boilingPoint: "2170 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Barium_unter_Argon.jpg/120px-Barium_unter_Argon.jpg",
-        forms: {
-            metallic: { description: "Silvery-white metal, burns with green flame.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Barium_unter_Argon.jpg/120px-Barium_unter_Argon.jpg" }
-        }
-    },
-    La: {
-        name: "Lanthanum",
-        atomicNumber: 57,
-        symbol: "La",
-        category: "Lanthanide",
-        atomicMass: "138.91 u",
-        density: "6.145 g/cm³",
-        meltingPoint: "1193 K",
-        boilingPoint: "3737 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Lanthanum_sample.jpg/120px-Lanthanum_sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-white, soft, ductile rare earth.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Lanthanum_sample.jpg/120px-Lanthanum_sample.jpg" }
-        }
-    },
-    Ce: {
-        name: "Cerium",
-        atomicNumber: 58,
-        symbol: "Ce",
-        category: "Lanthanide",
-        atomicMass: "140.12 u",
-        density: "6.770 g/cm³",
-        meltingPoint: "1068 K",
-        boilingPoint: "3716 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Cerium_sample.jpg/120px-Cerium_sample.jpg",
-        forms: {
-            metallic: { description: "Silvery metal, most abundant rare earth.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Cerium_sample.jpg/120px-Cerium_sample.jpg" }
-        }
-    },
-    Pr: {
-        name: "Praseodymium",
-        atomicNumber: 59,
-        symbol: "Pr",
-        category: "Lanthanide",
-        atomicMass: "140.91 u",
-        density: "6.773 g/cm³",
-        meltingPoint: "1208 K",
-        boilingPoint: "3793 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Praseodymium_sample.jpg/120px-Praseodymium_sample.jpg",
-        forms: {
-            metallic: { description: "Soft, silvery metal, tarnishes in air.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Praseodymium_sample.jpg/120px-Praseodymium_sample.jpg" }
-        }
-    },
-    Nd: {
-        name: "Neodymium",
-        atomicNumber: 60,
-        symbol: "Nd",
-        category: "Lanthanide",
-        atomicMass: "144.24 u",
-        density: "7.007 g/cm³",
-        meltingPoint: "1297 K",
-        boilingPoint: "3347 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Neodymium_sample.jpg/120px-Neodymium_sample.jpg",
-        forms: {
-            metallic: { description: "Bright silvery metal, used in strong magnets.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Neodymium_sample.jpg/120px-Neodymium_sample.jpg" }
-        }
-    },
-    Pm: {
-        name: "Promethium",
-        atomicNumber: 61,
-        symbol: "Pm",
-        category: "Lanthanide",
-        atomicMass: "145 u",
-        density: "7.26 g/cm³",
-        meltingPoint: "1315 K",
-        boilingPoint: "3273 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Promethium_sample.jpg/120px-Promethium_sample.jpg",
-        forms: {
-            metallic: { description: "Radioactive metal, glows faintly blue-green.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Promethium_sample.jpg/120px-Promethium_sample.jpg" }
-        }
-    },
-    Sm: {
-        name: "Samarium",
-        atomicNumber: 62,
-        symbol: "Sm",
-        category: "Lanthanide",
-        atomicMass: "150.36 u",
-        density: "7.520 g/cm³",
-        meltingPoint: "1345 K",
-        boilingPoint: "2067 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Samarium_sample.jpg/120px-Samarium_sample.jpg",
-        forms: {
-            metallic: { description: "Hard, brittle, silvery metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Samarium_sample.jpg/120px-Samarium_sample.jpg" }
-        }
-    },
-    Eu: {
-        name: "Europium",
-        atomicNumber: 63,
-        symbol: "Eu",
-        category: "Lanthanide",
-        atomicMass: "151.96 u",
-        density: "5.243 g/cm³",
-        meltingPoint: "1099 K",
-        boilingPoint: "1802 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Europium_sample.jpg/120px-Europium_sample.jpg",
-        forms: {
-            metallic: { description: "Soft, ductile, most reactive rare earth.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Europium_sample.jpg/120px-Europium_sample.jpg" }
-        }
-    },
-    Gd: {
-        name: "Gadolinium",
-        atomicNumber: 64,
-        symbol: "Gd",
-        category: "Lanthanide",
-        atomicMass: "157.25 u",
-        density: "7.895 g/cm³",
-        meltingPoint: "1585 K",
-        boilingPoint: "3546 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Gadolinium_sample.jpg/120px-Gadolinium_sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-white, ductile, ferromagnetic.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Gadolinium_sample.jpg/120px-Gadolinium_sample.jpg" }
-        }
-    },
-    Tb: {
-        name: "Terbium",
-        atomicNumber: 65,
-        symbol: "Tb",
-        category: "Lanthanide",
-        atomicMass: "158.93 u",
-        density: "8.229 g/cm³",
-        meltingPoint: "1629 K",
-        boilingPoint: "3503 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Terbium_sample.jpg/120px-Terbium_sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-gray metal, used in phosphors.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c6/Terbium_sample.jpg/120px-Terbium_sample.jpg" }
-        }
-    },
-    Dy: {
-        name: "Dysprosium",
-        atomicNumber: 66,
-        symbol: "Dy",
-        category: "Lanthanide",
-        atomicMass: "162.50 u",
-        density: "8.540 g/cm³",
-        meltingPoint: "1680 K",
-        boilingPoint: "2840 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Dysprosium_sample.jpg/120px-Dysprosium_sample.jpg",
-        forms: {
-            metallic: { description: "Bright silver metal, magnetic properties.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Dysprosium_sample.jpg/120px-Dysprosium_sample.jpg" }
-        }
-    },
-    Ho: {
-        name: "Holmium",
-        atomicNumber: 67,
-        symbol: "Ho",
-        category: "Lanthanide",
-        atomicMass: "164.93 u",
-        density: "8.795 g/cm³",
-        meltingPoint: "1734 K",
-        boilingPoint: "2993 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Holmium_sample.jpg/120px-Holmium_sample.jpg",
-        forms: {
-            metallic: { description: "Silvery metal, highest magnetic permeability.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Holmium_sample.jpg/120px-Holmium_sample.jpg" }
-        }
-    },
-    Er: {
-        name: "Erbium",
-        atomicNumber: 68,
-        symbol: "Er",
-        category: "Lanthanide",
-        atomicMass: "167.26 u",
-        density: "9.066 g/cm³",
-        meltingPoint: "1802 K",
-        boilingPoint: "3141 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Erbium_sample.jpg/120px-Erbium_sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-white metal, used in fiber optics.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Erbium_sample.jpg/120px-Erbium_sample.jpg" }
-        }
-    },
-    Tm: {
-        name: "Thulium",
-        atomicNumber: 69,
-        symbol: "Tm",
-        category: "Lanthanide",
-        atomicMass: "168.93 u",
-        density: "9.321 g/cm³",
-        meltingPoint: "1818 K",
-        boilingPoint: "2223 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Thulium_sample.jpg/120px-Thulium_sample.jpg",
-        forms: {
-            metallic: { description: "Bright silvery metal, least abundant rare earth.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Thulium_sample.jpg/120px-Thulium_sample.jpg" }
-        }
-    },
-    Yb: {
-        name: "Ytterbium",
-        atomicNumber: 70,
-        symbol: "Yb",
-        category: "Lanthanide",
-        atomicMass: "173.05 u",
-        density: "6.965 g/cm³",
-        meltingPoint: "1097 K",
-        boilingPoint: "1469 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Ytterbium_sample.jpg/120px-Ytterbium_sample.jpg",
-        forms: {
-            metallic: { description: "Soft, malleable, ductile metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Ytterbium_sample.jpg/120px-Ytterbium_sample.jpg" }
-        }
-    },
-    Lu: {
-        name: "Lutetium",
-        atomicNumber: 71,
-        symbol: "Lu",
-        category: "Lanthanide",
-        atomicMass: "174.97 u",
-        density: "9.841 g/cm³",
-        meltingPoint: "1925 K",
-        boilingPoint: "3675 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Lutetium_sample.jpg/120px-Lutetium_sample.jpg",
-        forms: {
-            metallic: { description: "Hard, dense, silvery-white metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Lutetium_sample.jpg/120px-Lutetium_sample.jpg" }
-        }
-    },
-    Hf: {
-        name: "Hafnium",
-        atomicNumber: 72,
-        symbol: "Hf",
-        category: "Transition Metal",
-        atomicMass: "178.49 u",
-        density: "13.31 g/cm³",
-        meltingPoint: "2506 K",
-        boilingPoint: "4876 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Hafnium_sample.jpg/120px-Hafnium_sample.jpg",
-        forms: {
-            metallic: { description: "Lustrous, silvery-gray, corrosion-resistant metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Hafnium_sample.jpg/120px-Hafnium_sample.jpg" }
-        }
-    },
-    Ta: {
-        name: "Tantalum",
-        atomicNumber: 73,
-        symbol: "Ta",
-        category: "Transition Metal",
-        atomicMass: "180.95 u",
-        density: "16.654 g/cm³",
-        meltingPoint: "3290 K",
-        boilingPoint: "5731 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Tantalum_sample.jpg/120px-Tantalum_sample.jpg",
-        forms: {
-            metallic: { description: "Hard, blue-gray, highly corrosion-resistant.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Tantalum_sample.jpg/120px-Tantalum_sample.jpg" }
-        }
-    },
-    W: {
-        name: "Tungsten",
-        atomicNumber: 74,
-        symbol: "W",
-        category: "Transition Metal",
-        atomicMass: "183.84 u",
-        density: "19.25 g/cm³",
-        meltingPoint: "3695 K",
-        boilingPoint: "5828 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Tungsten_sample.jpg/120px-Tungsten_sample.jpg",
-        forms: {
-            metallic: { description: "Highest melting point metal, steel-gray.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Tungsten_sample.jpg/120px-Tungsten_sample.jpg" }
-        }
-    },
-    Re: {
-        name: "Rhenium",
-        atomicNumber: 75,
-        symbol: "Re",
-        category: "Transition Metal",
-        atomicMass: "186.21 u",
-        density: "21.02 g/cm³",
-        meltingPoint: "3459 K",
-        boilingPoint: "5869 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Rhenium_sample.jpg/120px-Rhenium_sample.jpg",
-        forms: {
-            metallic: { description: "Dense, silvery-white metal, very rare.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Rhenium_sample.jpg/120px-Rhenium_sample.jpg" }
-        }
-    },
-    Os: {
-        name: "Osmium",
-        atomicNumber: 76,
-        symbol: "Os",
-        category: "Transition Metal",
-        atomicMass: "190.23 u",
-        density: "22.61 g/cm³",
-        meltingPoint: "3306 K",
-        boilingPoint: "5285 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Osmium_sample.jpg/120px-Osmium_sample.jpg",
-        forms: {
-            metallic: { description: "Densest natural element, blue-gray metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Osmium_sample.jpg/120px-Osmium_sample.jpg" }
-        }
-    },
-    Ir: {
-        name: "Iridium",
-        atomicNumber: 77,
-        symbol: "Ir",
-        category: "Transition Metal",
-        atomicMass: "192.22 u",
-        density: "22.56 g/cm³",
-        meltingPoint: "2739 K",
-        boilingPoint: "4701 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Iridium_sample.jpg/120px-Iridium_sample.jpg",
-        forms: {
-            metallic: { description: "Hard, brittle, most corrosion-resistant metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Iridium_sample.jpg/120px-Iridium_sample.jpg" }
-        }
-    },
-    Pt: {
-        name: "Platinum",
-        atomicNumber: 78,
-        symbol: "Pt",
-        category: "Transition Metal",
-        atomicMass: "195.08 u",
-        density: "21.46 g/cm³",
-        meltingPoint: "2041.4 K",
-        boilingPoint: "4098 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Platinum_sample.jpg/120px-Platinum_sample.jpg",
-        forms: {
-            metallic: { description: "Dense, malleable, noble metal, silvery-white.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Platinum_sample.jpg/120px-Platinum_sample.jpg" }
-        }
-    },
-    Au: {
-        name: "Gold",
-        atomicNumber: 79,
-        symbol: "Au",
-        category: "Transition Metal",
-        atomicMass: "196.97 u",
-        density: "19.282 g/cm³",
-        meltingPoint: "1337.33 K",
-        boilingPoint: "3129 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Gold_sample.jpg/120px-Gold_sample.jpg",
-        forms: {
-            metallic: { description: "Bright yellow, dense, soft, malleable metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Gold_sample.jpg/120px-Gold_sample.jpg" }
-        }
-    },
-    Hg: {
-        name: "Mercury",
-        atomicNumber: 80,
-        symbol: "Hg",
-        category: "Transition Metal",
-        atomicMass: "200.59 u",
-        density: "13.533 g/cm³",
-        meltingPoint: "234.43 K",
-        boilingPoint: "629.88 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Hg_%28mercury%29.jpg/120px-Hg_%28mercury%29.jpg",
-        forms: {
-            liquid: { description: "Only liquid metal at room temperature, silvery.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Hg_%28mercury%29.jpg/120px-Hg_%28mercury%29.jpg" }
-        }
-    },
-    Tl: {
-        name: "Thallium",
-        atomicNumber: 81,
-        symbol: "Tl",
-        category: "Post-Transition Metal",
-        atomicMass: "204.38 u",
-        density: "11.85 g/cm³",
-        meltingPoint: "577 K",
-        boilingPoint: "1746 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Thallium_sample.jpg/120px-Thallium_sample.jpg",
-        forms: {
-            metallic: { description: "Soft, gray metal, highly toxic.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Thallium_sample.jpg/120px-Thallium_sample.jpg" }
-        }
-    },
-    Pb: {
-        name: "Lead",
-        atomicNumber: 82,
-        symbol: "Pb",
-        category: "Post-Transition Metal",
-        atomicMass: "207.2 u",
-        density: "11.342 g/cm³",
-        meltingPoint: "600.61 K",
-        boilingPoint: "2022 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Lead_sample.jpg/120px-Lead_sample.jpg",
-        forms: {
-            metallic: { description: "Heavy, soft, malleable, bluish-white metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Lead_sample.jpg/120px-Lead_sample.jpg" }
-        }
-    },
-    Bi: {
-        name: "Bismuth",
-        atomicNumber: 83,
-        symbol: "Bi",
-        category: "Post-Transition Metal",
-        atomicMass: "208.98 u",
-        density: "9.807 g/cm³",
-        meltingPoint: "544.7 K",
-        boilingPoint: "1837 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Bismuth_sample.jpg/120px-Bismuth_sample.jpg",
-        forms: {
-            metallic: { description: "Brittle metal with iridescent oxide layer.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/Bismuth_sample.jpg/120px-Bismuth_sample.jpg" }
-        }
-    },
-    Po: {
-        name: "Polonium",
-        atomicNumber: 84,
-        symbol: "Po",
-        category: "Metalloid",
-        atomicMass: "209 u",
-        density: "9.32 g/cm³",
-        meltingPoint: "527 K",
-        boilingPoint: "1235 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Polonium.jpg/120px-Polonium.jpg",
-        forms: {
-            metallic: { description: "Highly radioactive, silvery metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Polonium.jpg/120px-Polonium.jpg" }
-        }
-    },
-    At: {
-        name: "Astatine",
-        atomicNumber: 85,
-        symbol: "At",
-        category: "Halogen",
-        atomicMass: "210 u",
-        density: "7 g/cm³",
-        meltingPoint: "575 K",
-        boilingPoint: "610 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Astatine.jpg/120px-Astatine.jpg",
-        forms: {
-            solid: { description: "Radioactive halogen, dark metallic appearance.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Astatine.jpg/120px-Astatine.jpg" }
-        }
-    },
-    Rn: {
-        name: "Radon",
-        atomicNumber: 86,
-        symbol: "Rn",
-        category: "Noble Gas",
-        atomicMass: "222 u",
-        density: "0.00973 g/cm³",
-        meltingPoint: "202 K",
-        boilingPoint: "211.3 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Radon.jpg/120px-Radon.jpg",
-        forms: {
-            gas: { description: "Radioactive noble gas, colorless.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Radon.jpg/120px-Radon.jpg" }
-        }
-    },
-    Fr: {
-        name: "Francium",
-        atomicNumber: 87,
-        symbol: "Fr",
-        category: "Alkali Metal",
-        atomicMass: "223 u",
-        density: "1.87 g/cm³",
-        meltingPoint: "300 K",
-        boilingPoint: "950 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Francium.jpg/120px-Francium.jpg",
-        forms: {
-            metallic: { description: "Highly radioactive alkali metal, extremely rare.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Francium.jpg/120px-Francium.jpg" }
-        }
-    },
-    Ra: {
-        name: "Radium",
-        atomicNumber: 88,
-        symbol: "Ra",
-        category: "Alkaline Earth Metal",
-        atomicMass: "226 u",
-        density: "5.5 g/cm³",
-        meltingPoint: "973 K",
-        boilingPoint: "2010 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Radium.jpg/120px-Radium.jpg",
-        forms: {
-            metallic: { description: "Silvery-white, luminescent, radioactive metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Radium.jpg/120px-Radium.jpg" }
-        }
-    },
-    Ac: {
-        name: "Actinium",
-        atomicNumber: 89,
-        symbol: "Ac",
-        category: "Actinide",
-        atomicMass: "227 u",
-        density: "10.07 g/cm³",
-        meltingPoint: "1500 K",
-        boilingPoint: "3500 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Actinium.jpg/120px-Actinium.jpg",
-        forms: {
-            metallic: { description: "Silvery-white radioactive metal, glows blue.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Actinium.jpg/120px-Actinium.jpg" }
-        }
-    },
-    Th: {
-        name: "Thorium",
-        atomicNumber: 90,
-        symbol: "Th",
-        category: "Actinide",
-        atomicMass: "232.04 u",
-        density: "11.72 g/cm³",
-        meltingPoint: "2115 K",
-        boilingPoint: "5061 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Thorium_sample.jpg/120px-Thorium_sample.jpg",
-        forms: {
-            metallic: { description: "Silvery-white, radioactive, used in nuclear reactors.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Thorium_sample.jpg/120px-Thorium_sample.jpg" }
-        }
-    },
-    Pa: {
-        name: "Protactinium",
-        atomicNumber: 91,
-        symbol: "Pa",
-        category: "Actinide",
-        atomicMass: "231.04 u",
-        density: "15.37 g/cm³",
-        meltingPoint: "1841 K",
-        boilingPoint: "4300 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Protactinium.jpg/120px-Protactinium.jpg",
-        forms: {
-            metallic: { description: "Dense, silvery-gray radioactive metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Protactinium.jpg/120px-Protactinium.jpg" }
-        }
-    },
-    U: {
-        name: "Uranium",
-        atomicNumber: 92,
-        symbol: "U",
-        category: "Actinide",
-        atomicMass: "238.03 u",
-        density: "19.1 g/cm³",
-        meltingPoint: "1405.3 K",
-        boilingPoint: "4404 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/HEUraniumC.jpg/120px-HEUraniumC.jpg",
-        forms: {
-            metallic: { description: "Dense, silvery-white radioactive metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/HEUraniumC.jpg/120px-HEUraniumC.jpg" }
-        }
-    },
-    Np: {
-        name: "Neptunium",
-        atomicNumber: 93,
-        symbol: "Np",
-        category: "Actinide",
-        atomicMass: "237 u",
-        density: "20.45 g/cm³",
-        meltingPoint: "917 K",
-        boilingPoint: "4447 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Neptunium2.jpg/120px-Neptunium2.jpg",
-        forms: {
-            metallic: { description: "Silvery metallic, first transuranium element.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Neptunium2.jpg/120px-Neptunium2.jpg" }
-        }
-    },
-    Pu: {
-        name: "Plutonium",
-        atomicNumber: 94,
-        symbol: "Pu",
-        category: "Actinide",
-        atomicMass: "244 u",
-        density: "19.86 g/cm³",
-        meltingPoint: "912.5 K",
-        boilingPoint: "3501 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Plutonium3.jpg/120px-Plutonium3.jpg",
-        forms: {
-            metallic: { description: "Silvery-white metal, used in nuclear weapons.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Plutonium3.jpg/120px-Plutonium3.jpg" }
-        }
-    },
-    Am: {
-        name: "Americium",
-        atomicNumber: 95,
-        symbol: "Am",
-        category: "Actinide",
-        atomicMass: "243 u",
-        density: "13.69 g/cm³",
-        meltingPoint: "1449 K",
-        boilingPoint: "2880 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Americium.jpg/120px-Americium.jpg",
-        forms: {
-            metallic: { description: "Silvery-white radioactive metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Americium.jpg/120px-Americium.jpg" }
-        }
-    },
-    Cm: {
-        name: "Curium",
-        atomicNumber: 96,
-        symbol: "Cm",
-        category: "Actinide",
-        atomicMass: "247 u",
-        density: "13.51 g/cm³",
-        meltingPoint: "1613 K",
-        boilingPoint: "3383 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Curium.jpg/120px-Curium.jpg",
-        forms: {
-            metallic: { description: "Silvery-white, glows purple in dark.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Curium.jpg/120px-Curium.jpg" }
-        }
-    },
-    Bk: {
-        name: "Berkelium",
-        atomicNumber: 97,
-        symbol: "Bk",
-        category: "Actinide",
-        atomicMass: "247 u",
-        density: "14.79 g/cm³",
-        meltingPoint: "1259 K",
-        boilingPoint: "2900 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Berkelium.jpg/120px-Berkelium.jpg",
-        forms: {
-            metallic: { description: "Silvery radioactive metal, synthetic.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Berkelium.jpg/120px-Berkelium.jpg" }
-        }
-    },
-    Cf: {
-        name: "Californium",
-        atomicNumber: 98,
-        symbol: "Cf",
-        category: "Actinide",
-        atomicMass: "251 u",
-        density: "15.1 g/cm³",
-        meltingPoint: "1173 K",
-        boilingPoint: "1743 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Californium.jpg/120px-Californium.jpg",
-        forms: {
-            metallic: { description: "Silvery metal, powerful neutron emitter.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Californium.jpg/120px-Californium.jpg" }
-        }
-    },
-    Es: {
-        name: "Einsteinium",
-        atomicNumber: 99,
-        symbol: "Es",
-        category: "Actinide",
-        atomicMass: "252 u",
-        density: "8.84 g/cm³",
-        meltingPoint: "1133 K",
-        boilingPoint: "1269 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Einsteinium.jpg/120px-Einsteinium.jpg",
-        forms: {
-            metallic: { description: "Silvery synthetic radioactive metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Einsteinium.jpg/120px-Einsteinium.jpg" }
-        }
-    },
-    Fm: {
-        name: "Fermium",
-        atomicNumber: 100,
-        symbol: "Fm",
-        category: "Actinide",
-        atomicMass: "257 u",
-        density: "9.7 g/cm³",
-        meltingPoint: "1800 K",
-        boilingPoint: "Unknown",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Fermium.jpg/120px-Fermium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, very unstable.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Fermium.jpg/120px-Fermium.jpg" }
-        }
-    },
-    Md: {
-        name: "Mendelevium",
-        atomicNumber: 101,
-        symbol: "Md",
-        category: "Actinide",
-        atomicMass: "258 u",
-        density: "10.3 g/cm³",
-        meltingPoint: "1100 K",
-        boilingPoint: "Unknown",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Mendelevium.jpg/120px-Mendelevium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Mendelevium.jpg/120px-Mendelevium.jpg" }
-        }
-    },
-    No: {
-        name: "Nobelium",
-        atomicNumber: 102,
-        symbol: "No",
-        category: "Actinide",
-        atomicMass: "259 u",
-        density: "9.9 g/cm³",
-        meltingPoint: "1100 K",
-        boilingPoint: "Unknown",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Nobelium.jpg/120px-Nobelium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, extremely unstable.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Nobelium.jpg/120px-Nobelium.jpg" }
-        }
-    },
-    Lr: {
-        name: "Lawrencium",
-        atomicNumber: 103,
-        symbol: "Lr",
-        category: "Actinide",
-        atomicMass: "262 u",
-        density: "15.6 g/cm³",
-        meltingPoint: "1900 K",
-        boilingPoint: "Unknown",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Lawrencium.jpg/120px-Lawrencium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, last actinide.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Lawrencium.jpg/120px-Lawrencium.jpg" }
-        }
-    },
-    Rf: {
-        name: "Rutherfordium",
-        atomicNumber: 104,
-        symbol: "Rf",
-        category: "Transition Metal",
-        atomicMass: "267 u",
-        density: "23 g/cm³",
-        meltingPoint: "2400 K",
-        boilingPoint: "5800 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Rutherfordium.jpg/120px-Rutherfordium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive transition metal.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Rutherfordium.jpg/120px-Rutherfordium.jpg" }
-        }
-    },
-    Db: {
-        name: "Dubnium",
-        atomicNumber: 105,
-        symbol: "Db",
-        category: "Transition Metal",
-        atomicMass: "268 u",
-        density: "29 g/cm³",
-        meltingPoint: "Unknown",
-        boilingPoint: "Unknown",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Dubnium.jpg/120px-Dubnium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, very short-lived.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Dubnium.jpg/120px-Dubnium.jpg" }
-        }
-    },
-    Sg: {
-        name: "Seaborgium",
-        atomicNumber: 106,
-        symbol: "Sg",
-        category: "Transition Metal",
-        atomicMass: "271 u",
-        density: "35 g/cm³",
-        meltingPoint: "Unknown",
-        boilingPoint: "Unknown",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Seaborgium.jpg/120px-Seaborgium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, extremely unstable.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Seaborgium.jpg/120px-Seaborgium.jpg" }
-        }
-    },
-    Bh: {
-        name: "Bohrium",
-        atomicNumber: 107,
-        symbol: "Bh",
-        category: "Transition Metal",
-        atomicMass: "272 u",
-        density: "37 g/cm³",
-        meltingPoint: "Unknown",
-        boilingPoint: "Unknown",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Bohrium.jpg/120px-Bohrium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, millisecond half-life.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Bohrium.jpg/120px-Bohrium.jpg" }
-        }
-    },
-    Hs: {
-        name: "Hassium",
-        atomicNumber: 108,
-        symbol: "Hs",
-        category: "Transition Metal",
-        atomicMass: "270 u",
-        density: "40 g/cm³",
-        meltingPoint: "Unknown",
-        boilingPoint: "Unknown",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Hassium.jpg/120px-Hassium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, second half-life.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Hassium.jpg/120px-Hassium.jpg" }
-        }
-    },
-    Mt: {
-        name: "Meitnerium",
-        atomicNumber: 109,
-        symbol: "Mt",
-        category: "Transition Metal",
-        atomicMass: "276 u",
-        density: "37 g/cm³",
-        meltingPoint: "Unknown",
-        boilingPoint: "Unknown",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Meitnerium.jpg/120px-Meitnerium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, extremely short-lived.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e2/Meitnerium.jpg/120px-Meitnerium.jpg" }
-        }
-    },
-    Ds: {
-        name: "Darmstadtium",
-        atomicNumber: 110,
-        symbol: "Ds",
-        category: "Transition Metal",
-        atomicMass: "281 u",
-        density: "34 g/cm³",
-        meltingPoint: "Unknown",
-        boilingPoint: "Unknown",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Darmstadtium.jpg/120px-Darmstadtium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, very unstable.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Darmstadtium.jpg/120px-Darmstadtium.jpg" }
-        }
-    },
-    Rg: {
-        name: "Roentgenium",
-        atomicNumber: 111,
-        symbol: "Rg",
-        category: "Transition Metal",
-        atomicMass: "282 u",
-        density: "28 g/cm³",
-        meltingPoint: "Unknown",
-        boilingPoint: "Unknown",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Roentgenium.jpg/120px-Roentgenium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, extremely unstable.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Roentgenium.jpg/120px-Roentgenium.jpg" }
-        }
-    },
-    Cn: {
-        name: "Copernicium",
-        atomicNumber: 112,
-        symbol: "Cn",
-        category: "Transition Metal",
-        atomicMass: "285 u",
-        density: "23 g/cm³",
-        meltingPoint: "Unknown",
-        boilingPoint: "Unknown",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Copernicium.jpg/120px-Copernicium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, gas at room temperature.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Copernicium.jpg/120px-Copernicium.jpg" }
-        }
-    },
-    Nh: {
-        name: "Nihonium",
-        atomicNumber: 113,
-        symbol: "Nh",
-        category: "Post-Transition Metal",
-        atomicMass: "286 u",
-        density: "16 g/cm³",
-        meltingPoint: "700 K",
-        boilingPoint: "1400 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Nihonium.jpg/120px-Nihonium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, predicted properties.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f5/Nihonium.jpg/120px-Nihonium.jpg" }
-        }
-    },
-    Fl: {
-        name: "Flerovium",
-        atomicNumber: 114,
-        symbol: "Fl",
-        category: "Post-Transition Metal",
-        atomicMass: "289 u",
-        density: "14 g/cm³",
-        meltingPoint: "340 K",
-        boilingPoint: "420 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Flerovium.jpg/120px-Flerovium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, possibly gaseous.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1f/Flerovium.jpg/120px-Flerovium.jpg" }
-        }
-    },
-    Mc: {
-        name: "Moscovium",
-        atomicNumber: 115,
-        symbol: "Mc",
-        category: "Post-Transition Metal",
-        atomicMass: "290 u",
-        density: "13.5 g/cm³",
-        meltingPoint: "670 K",
-        boilingPoint: "1400 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Moscovium.jpg/120px-Moscovium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, extremely unstable.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Moscovium.jpg/120px-Moscovium.jpg" }
-        }
-    },
-    Lv: {
-        name: "Livermorium",
-        atomicNumber: 116,
-        symbol: "Lv",
-        category: "Post-Transition Metal",
-        atomicMass: "293 u",
-        density: "12.9 g/cm³",
-        meltingPoint: "708 K",
-        boilingPoint: "1085 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Livermorium.jpg/120px-Livermorium.jpg",
-        forms: {
-            metallic: { description: "Synthetic radioactive metal, millisecond half-life.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Livermorium.jpg/120px-Livermorium.jpg" }
-        }
-    },
-    Ts: {
-        name: "Tennessine",
-        atomicNumber: 117,
-        symbol: "Ts",
-        category: "Halogen",
-        atomicMass: "294 u",
-        density: "7.2 g/cm³",
-        meltingPoint: "723 K",
-        boilingPoint: "883 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Tennessine.jpg/120px-Tennessine.jpg",
-        forms: {
-            solid: { description: "Synthetic radioactive halogen, metallic properties.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fc/Tennessine.jpg/120px-Tennessine.jpg" }
-        }
-    },
-    Og: {
-        name: "Oganesson",
-        atomicNumber: 118,
-        symbol: "Og",
-        category: "Noble Gas",
-        atomicMass: "294 u",
-        density: "5 g/cm³",
-        meltingPoint: "325 K",
-        boilingPoint: "450 K",
-        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Oganesson.jpg/120px-Oganesson.jpg",
-        forms: {
-            solid: { description: "Synthetic radioactive noble gas, possibly solid at room temperature.", image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Oganesson.jpg/120px-Oganesson.jpg" }
-        }
+// Utility for loading overlay
+function showLoading(percent=0) {
+  const overlay = document.getElementById('loadingOverlay');
+  overlay.style.display = 'flex';
+  document.getElementById('loadingPercent').textContent = percent ? `${percent}%` : '';
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Message box
+function showMsg(text){const box=document.getElementById('msgBox'); box.textContent=text; box.style.display='block'; setTimeout(()=>box.style.display='none',2000);} 
+
+function openDB(){return new Promise((res,rej)=>{const req=indexedDB.open(DB_NAME,1); req.onupgradeneeded=e=>{let d=e.target.result;if(!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE,{keyPath:'id'});}; req.onsuccess=()=>{db=req.result; res(db)}; req.onerror=()=>rej(req.error);});} 
+function putFile(obj){return new Promise((res,rej)=>{let tx=db.transaction(STORE,'readwrite'); let s=tx.objectStore(STORE); let r=s.put(obj); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});} 
+function getAllFiles(){return new Promise((res,rej)=>{let tx=db.transaction(STORE,'readonly'); let s=tx.objectStore(STORE); let req=s.getAll(); req.onsuccess=()=>res(req.result); req.onerror=()=>rej(req.error);});} 
+function deleteFile(id){return new Promise((res,rej)=>{let tx=db.transaction(STORE,'readwrite'); let s=tx.objectStore(STORE); let r=s.delete(id); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error);});}
+
+function getChunks(arr, size) {
+  let chunks = [];
+  for(let i=0; i<arr.length; i+=size) {
+    chunks.push(arr.slice(i, i+size));
+  }
+  return chunks;
+}
+
+function renderFilesChunks(chunks) {
+  const list=document.getElementById('fileList');
+  list.innerHTML="";
+  if(chunks.length===0){list.innerHTML = '<div style="text-align:center;color:#888">No files yet</div>'; return;}
+  chunks.forEach((chunkFiles, chunkIdx) => {
+    if(chunkFiles.length === 0) return;
+    let chunkDiv = document.createElement('div');
+    chunkDiv.className = 'chunk';
+    chunkFiles.forEach(file=>{
+      let div=document.createElement('div'); 
+      div.className='file';
+      // Show big thumbnail on top
+      if(file.thumb){
+        let img=document.createElement('img'); 
+        img.src=file.thumb; 
+        img.className='thumb'; 
+        div.appendChild(img);
+      }
+      let name=document.createElement('div'); 
+      name.className='name'; 
+      name.textContent=file.name; 
+      div.appendChild(name);
+      let meta=document.createElement('div'); 
+      meta.className='meta';
+      let actions=document.createElement('div'); 
+      actions.className='actions';
+      let dl=document.createElement('button'); 
+      dl.className='btn'; 
+      dl.textContent='Download'; 
+      dl.onclick=()=>{const url=URL.createObjectURL(file.blob); const a=document.createElement('a'); a.href=url; a.download=file.name; a.click(); URL.revokeObjectURL(url);};
+      let setThumb=document.createElement('input'); 
+      setThumb.type='file'; 
+      setThumb.accept='image/*'; 
+      setThumb.style.display='none'; 
+      setThumb.onchange=ev=>{let imgf=ev.target.files[0]; if(!imgf) return; let r=new FileReader(); r.onload=async()=>{file.thumb=r.result; await putFile(file); renderAll(); showMsg('Thumbnail set');}; r.readAsDataURL(imgf);};
+      let thumbBtn=document.createElement('label'); 
+      thumbBtn.className='btn secondary'; 
+      thumbBtn.textContent='Set Thumbnail'; 
+      thumbBtn.appendChild(setThumb);
+      let renBtn=document.createElement('button'); 
+      renBtn.className='btn secondary'; 
+      renBtn.textContent='Rename'; 
+      renBtn.onclick=()=>startRename(file,div); 
+      actions.append(dl,thumbBtn,renBtn);
+      meta.appendChild(actions);
+      div.appendChild(meta);
+
+      // Long press for delete confirmation (no delete button)
+      let pressTimer=null;
+      function showDeleteConfirm(){
+        if(confirm('Delete '+file.name+'?')){
+          deleteFile(file.id).then(()=>{
+            showMsg('Deleted');
+            renderAll();
+          });
+        }
+      }
+      function startPress(){ pressTimer=setTimeout(showDeleteConfirm,500);}
+      function cancelPress(){ if(pressTimer){ clearTimeout(pressTimer); pressTimer=null; } }
+      div.addEventListener('mousedown', startPress);
+      div.addEventListener('mouseup', cancelPress);
+      div.addEventListener('mouseleave', cancelPress);
+      div.addEventListener('touchstart', startPress);
+      div.addEventListener('touchend', cancelPress);
+      div.addEventListener('touchmove', cancelPress);
+
+      chunkDiv.appendChild(div); 
+    });
+    list.appendChild(chunkDiv);
+  });
+}
+
+function updateChunksIndicator(totalChunks) {
+  const indicator = document.getElementById('chunksIndicator');
+  indicator.textContent = '';
+}
+
+function handleChunkRender(){
+  const fileList = document.getElementById('fileList');
+  fileList.scrollTop = 0;
+  if(filesCache.length === 0) {
+    fileList.innerHTML = '<div style="text-align:center;color:#888">No files yet</div>';
+    updateChunksIndicator(0);
+    return;
+  }
+  let chunks = getChunks(filesCache, chunkSize);
+  if(chunks.length === 0 || !chunks.some(arr => arr.length > 0)) {
+    fileList.innerHTML = '';
+    updateChunksIndicator(0);
+    return;
+  }
+  renderFilesChunks(chunks);
+  updateChunksIndicator(chunks.length);
+}
+
+function startRename(file,row){
+  const meta=row.querySelector('.meta'); meta.innerHTML='';
+  let box=document.createElement('div'); box.className='rename-box';
+  let input=document.createElement('input'); input.className='rename-input'; input.value=file.name; input.style.width='220px';
+  let save=document.createElement('button'); save.className='btn'; save.textContent='Save'; save.onclick=async()=>{
+    if(!input.value.trim()){ alert('Name cannot be empty'); return; }
+    file.name=input.value.trim(); await putFile(file); renderAll(); showMsg('Renamed');};
+  let cancel=document.createElement('button'); cancel.className='btn danger'; cancel.textContent='Cancel'; cancel.onclick=()=>renderAll();
+  box.append(input,save,cancel); meta.appendChild(box); 
+}
+
+async function renderAll(){
+  await openDB(); 
+  let all = await getAllFiles(); 
+  const q=document.getElementById('searchInput').value.toLowerCase(); 
+  if(q) all = all.filter(f=> (f.name||'').toLowerCase().includes(q));
+  filesCache = all.sort((a,b)=> (b.uploadedAt||'').localeCompare(a.uploadedAt||''));
+  handleChunkRender();
+}
+
+// Upload logic with loading/progress for large files
+async function handleUpload(f){ 
+  if(!f) return; 
+  if(!(f.name.endsWith('.mcpack')||f.name.endsWith('.mcworld'))){ 
+    showMsg('Only .mcpack or .mcworld allowed'); 
+    return; 
+  }
+  const reader=new FileReader();
+  const progress=document.getElementById('progressBar');
+  const fill=document.getElementById('progressFill');
+  // Show overlay for files > 5MB
+  const LARGE_FILE = 5*1024*1024;
+  let useOverlay = f.size > LARGE_FILE;
+  if(useOverlay) showLoading(0); else progress.style.display='block';
+  reader.onprogress=e=>{
+    if(e.lengthComputable){
+      let percent = Math.round(e.loaded/e.total*100);
+      if(useOverlay) document.getElementById('loadingPercent').textContent = percent+'%';
+      else fill.style.width=(percent)+'%';
     }
+  };
+  reader.onload=async()=>{
+    const blob=new Blob([reader.result],{type:f.type||'application/octet-stream'});
+    const obj={id:Date.now().toString()+Math.random().toString(36).slice(2), name:f.name, blob, uploadedAt:new Date().toISOString(), thumb:null};
+    await putFile(obj);
+    if(useOverlay) hideLoading(); else {progress.style.display='none'; fill.style.width='0%';}
+    showMsg('Uploaded: '+f.name); renderAll();
+  };
+  reader.onerror = ()=>{
+    if(useOverlay) hideLoading(); else {progress.style.display='none'; fill.style.width='0%';}
+    showMsg('Error uploading file');
+  };
+  reader.readAsArrayBuffer(f);
+}
+
+// UI bindings
+const uploadBtn=document.getElementById('uploadBtn');
+const fileInput=document.getElementById('fileInput');
+uploadBtn.addEventListener('click', ()=> fileInput.click());
+fileInput.addEventListener('change', e=>{
+  if(e.target.files.length>0){
+    let files = Array.from(e.target.files);
+    let i=0;
+    function next(){
+      if(i>=files.length) return;
+      handleUpload(files[i]).then(()=>{i++; next();});
+    }
+    next();
+  }
+});
+
+const dz=document.getElementById('dropZone');
+dz.ondragover = e=>{ e.preventDefault(); dz.style.background='#333'; };
+dz.ondragleave = ()=>dz.style.background='';
+dz.ondrop = e=>{
+  e.preventDefault(); dz.style.background='';
+  let files = Array.from(e.dataTransfer.files);
+  let i=0;
+  function next(){
+    if(i>=files.length) return;
+    handleUpload(files[i]).then(()=>{i++; next();});
+  }
+  next();
 };
 
-// Get modal and its elements
-const modal = document.getElementById("element-modal");
-const modalClose = document.getElementById("modal-close");
-const elementName = document.getElementById("element-name");
-const elementImg = document.getElementById("element-img");
-const elementDetails = document.getElementById("element-details");
+document.getElementById('searchInput').oninput = ()=>{
+  clearTimeout(window._searchTimeout);
+  window._searchTimeout = setTimeout(()=>renderAll(),300);
+};
 
-// Add click events to every element button
-document.querySelectorAll(".element-button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const symbol = btn.getAttribute("data-symbol");
-    const data = elements[symbol];
-    if (data) {
-      // Fill modal with element details
-      elementName.textContent = `${data.name} (${data.symbol})`;
-      elementImg.src = data.image;
-      elementDetails.innerHTML = `
-        <p><b>Atomic Number:</b> ${data.atomicNumber}</p>
-        <p><b>Category:</b> ${data.category}</p>
-        <p><b>Atomic Mass:</b> ${data.atomicMass}</p>
-        <p><b>Density:</b> ${data.density}</p>
-        <p><b>Melting Point:</b> ${data.meltingPoint}</p>
-        <p><b>Boiling Point:</b> ${data.boilingPoint}</p>
-        <div class="subsection">Forms:</div>
-        ${Object.entries(data.forms).map(([form, info]) => `
-          <p><b>${form}:</b> ${info.description || ""}</p>
-          ${info.image ? `<img src="${info.image}" alt="${form}">` : ""}
-        `).join("")}
-      `;
-      // Show modal
-      modal.style.display = "flex";
-    }
-  });
-});
-
-// Close modal
-modalClose.addEventListener("click", () => {
-  modal.style.display = "none";
-});
-
-// Open modal when button clicked
-document.querySelectorAll('.element-button').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const symbol = btn.dataset.symbol;
-        const element = elementsData[symbol];
-        if (element) {
-            document.getElementById('element-name').innerText = element.name;
-            document.getElementById('element-img').src = element.image;
-
-            let html = `
-                <p><strong>Symbol:</strong> ${element.symbol}</p>
-                <p><strong>Atomic Number:</strong> ${element.atomicNumber}</p>
-                <p><strong>Category:</strong> ${element.category}</p>
-                <p><strong>Atomic Mass:</strong> ${element.atomicMass}</p>
-                <p><strong>Density:</strong> ${element.density}</p>
-                <p><strong>Melting Point:</strong> ${element.meltingPoint}</p>
-                <p><strong>Boiling Point:</strong> ${element.boilingPoint}</p>
-            `;
-
-            if (element.forms) {
-                html += `<div class="subsection">Forms:</div>`;
-                for (const [key, form] of Object.entries(element.forms)) {
-                    html += `<p><strong>${key.charAt(0).toUpperCase() + key.slice(1)}:</strong> ${form.description}</p>`;
-                    if(form.image) html += `<img src="${form.image}" alt="${key}">`;
-                }
-            }
-
-            document.getElementById('element-details').innerHTML = html;
-            document.getElementById('element-modal').style.display = 'flex';
-        }
-    });
-});
-
-// Close modal
-document.getElementById('modal-close').addEventListener('click', () => {
-    document.getElementById('element-modal').style.display = 'none';
-});
-window.addEventListener('click', (e) => {
-    if (e.target == document.getElementById('element-modal')) {
-        document.getElementById('element-modal').style.display = 'none';
-    }
-});
-</script>
-<div id="basic-math">
-  <h1>Basic 22 Math Formulas</h1>
-
-  <div class="formula">
-    <h3>1. (a+b)² Formula</h3>
-    <p><b>Formula:</b> \( (a+b)^2 = a^2 + 2ab + b^2 \)</p>
-    <p><b>Explanation:</b> Square of a sum expands into three terms.</p>
-    <p><b>Example:</b> If a=2, b=3 → (2+3)²=25 = 4+12+9.</p>
-  </div>
-
-  <div class="formula">
-    <h3>2. (a-b)² Formula</h3>
-    <p><b>Formula:</b> \( (a-b)^2 = a^2 - 2ab + b^2 \)</p>
-    <p><b>Explanation:</b> Square of a difference expands with negative middle term.</p>
-    <p><b>Example:</b> If a=5, b=2 → (5-2)²=9 = 25-20+4.</p>
-  </div>
-
-  <div class="formula">
-    <h3>3. (x+a)(x+b)</h3>
-    <p><b>Formula:</b> \( (x+a)(x+b) = x^2 + (a+b)x + ab \)</p>
-    <p><b>Explanation:</b> Multiply two binomials with same x.</p>
-    <p><b>Example:</b> (x+2)(x+3)=x²+5x+6.</p>
-  </div>
-
-  <div class="formula">
-    <h3>4. (a+b+c)²</h3>
-    <p><b>Formula:</b> \( (a+b+c)^2 = a^2+b^2+c^2+2(ab+bc+ca) \)</p>
-    <p><b>Explanation:</b> Square of three terms expands into 6 terms.</p>
-    <p><b>Example:</b> (1+2+3)²=36 = 1+4+9+2(2+6+3).</p>
-  </div>
-
-  <div class="formula">
-    <h3>5. (a+b)³</h3>
-    <p><b>Formula:</b> \( (a+b)^3 = a^3 + 3a^2b + 3ab^2 + b^3 \)</p>
-    <p><b>Explanation:</b> Cube of a sum expands into 4 terms.</p>
-    <p><b>Example:</b> (2+1)³=27 = 8+12+6+1.</p>
-  </div>
-
-  <div class="formula">
-    <h3>6. (a-b)³</h3>
-    <p><b>Formula:</b> \( (a-b)^3 = a^3 - 3a^2b + 3ab^2 - b^3 \)</p>
-    <p><b>Explanation:</b> Cube of difference has alternating signs.</p>
-    <p><b>Example:</b> (3-1)³=8 = 27-27+9-1.</p>
-  </div>
-
-  <div class="formula">
-    <h3>7. a² - b²</h3>
-    <p><b>Formula:</b> \( a^2 - b^2 = (a+b)(a-b) \)</p>
-    <p><b>Explanation:</b> Difference of squares factorizes into sum×difference.</p>
-    <p><b>Example:</b> 9²-4²=65 = (9+4)(9-4).</p>
-  </div>
-
-  <div class="formula">
-    <h3>8. a³ + b³</h3>
-    <p><b>Formula:</b> \( a^3+b^3 = (a+b)(a^2-ab+b^2) \)</p>
-    <p><b>Explanation:</b> Sum of cubes factorizes into two parts.</p>
-    <p><b>Example:</b> 2³+3³=35 = (5)(4-6+9).</p>
-  </div>
-
-  <div class="formula">
-    <h3>9. a³ - b³</h3>
-    <p><b>Formula:</b> \( a^3-b^3 = (a-b)(a^2+ab+b^2) \)</p>
-    <p><b>Explanation:</b> Difference of cubes factorizes similarly.</p>
-    <p><b>Example:</b> 5³-2³=117 = (3)(25+10+4).</p>
-  </div>
-
-  <div class="formula">
-    <h3>10. (x+a)²-(x+b)²</h3>
-    <p><b>Formula:</b> \( (x+a)^2-(x+b)^2=(a-b)(2x+a+b) \)</p>
-    <p><b>Explanation:</b> Difference of two binomial squares.</p>
-    <p><b>Example:</b> (x+2)²-(x+1)²= (1)(2x+3).</p>
-  </div>
-
-  <div class="formula">
-    <h3>11. (a+b)²-(a-b)²</h3>
-    <p><b>Formula:</b> \( (a+b)^2-(a-b)^2 = 4ab \)</p>
-    <p><b>Explanation:</b> Subtracting gives double product.</p>
-    <p><b>Example:</b> (3+2)²-(3-2)²=20 = 4×3×2.</p>
-  </div>
-
-  <div class="formula">
-    <h3>12. (a+b+c)³</h3>
-    <p><b>Formula:</b> \( (a+b+c)^3 = a^3+b^3+c^3+3(a+b)(b+c)(c+a) \)</p>
-    <p><b>Explanation:</b> Expansion of cube of three terms.</p>
-    <p><b>Example:</b> (1+1+1)³=27.</p>
-  </div>
-
-  <!-- … continue until all 22 formulas (I can expand if you want full list) … -->
-<div id="geometry-formulas">
-  <h1>Geometry Formulas</h1>
-
-  <div class="formula">
-    <h3>1. Perimeter of a Rectangle</h3>
-    <p><b>Formula:</b> \( P = 2(l+w) \)</p>
-    <p><b>Explanation:</b> Add up all four sides of rectangle.</p>
-    <p><b>Example:</b> l=5, w=3 → P=16.</p>
-  </div>
-
-  <div class="formula">
-    <h3>2. Area of a Rectangle</h3>
-    <p><b>Formula:</b> \( A = lw \)</p>
-    <p><b>Explanation:</b> Multiply length × width.</p>
-    <p><b>Example:</b> l=5, w=3 → A=15.</p>
-  </div>
-
-  <div class="formula">
-    <h3>3. Area of a Square</h3>
-    <p><b>Formula:</b> \( A = a^2 \)</p>
-    <p><b>Explanation:</b> Side × side.</p>
-    <p><b>Example:</b> a=4 → A=16.</p>
-  </div>
-
-  <div class="formula">
-    <h3>4. Perimeter of a Square</h3>
-    <p><b>Formula:</b> \( P = 4a \)</p>
-    <p><b>Explanation:</b> Add all four equal sides.</p>
-    <p><b>Example:</b> a=4 → P=16.</p>
-  </div>
-
-  <div class="formula">
-    <h3>5. Area of a Triangle</h3>
-    <p><b>Formula:</b> \( A = \frac{1}{2}bh \)</p>
-    <p><b>Explanation:</b> Half of base × height.</p>
-    <p><b>Example:</b> b=6, h=4 → A=12.</p>
-  </div>
-
-  <div class="formula">
-    <h3>6. Heron’s Formula (Triangle)</h3>
-    <p><b>Formula:</b> \( A = \sqrt{s(s-a)(s-b)(s-c)} \), where \(s=\frac{a+b+c}{2}\)</p>
-    <p><b>Explanation:</b> Use when only sides are known.</p>
-    <p><b>Example:</b> a=3, b=4, c=5 → A=6.</p>
-  </div>
-
-  <div class="formula">
-    <h3>7. Pythagoras Theorem</h3>
-    <p><b>Formula:</b> \( a^2+b^2=c^2 \)</p>
-    <p><b>Explanation:</b> In a right triangle, hypotenuse² = sum of squares of other two sides.</p>
-    <p><b>Example:</b> a=3, b=4 → c=5.</p>
-  </div>
-
-  <div class="formula">
-    <h3>8. Circumference of Circle</h3>
-    <p><b>Formula:</b> \( C=2\pi r \)</p>
-    <p><b>Explanation:</b> Distance around a circle.</p>
-    <p><b>Example:</b> r=7 → C≈44.</p>
-  </div>
-
-  <div class="formula">
-    <h3>9. Area of Circle</h3>
-    <p><b>Formula:</b> \( A=\pi r^2 \)</p>
-    <p><b>Explanation:</b> Multiply pi × radius².</p>
-    <p><b>Example:</b> r=7 → A≈154.</p>
-  </div>
-
-  <div class="formula">
-    <h3>10. Area of Parallelogram</h3>
-    <p><b>Formula:</b> \( A=bh \)</p>
-    <p><b>Explanation:</b> Base × perpendicular height.</p>
-    <p><b>Example:</b> b=8, h=5 → A=40.</p>
-  </div>
-
-  <div class="formula">
-    <h3>11. Area of Trapezium</h3>
-    <p><b>Formula:</b> \( A=\frac{1}{2}(a+b)h \)</p>
-    <p><b>Explanation:</b> Average of parallel sides × height.</p>
-    <p><b>Example:</b> a=6, b=10, h=4 → A=32.</p>
-  </div>
-
-  <div class="formula">
-    <h3>12. Volume of Cube</h3>
-    <p><b>Formula:</b> \( V=a^3 \)</p>
-    <p><b>Explanation:</b> Side × side × side.</p>
-    <p><b>Example:</b> a=3 → V=27.</p>
-  </div>
-
-  <div class="formula">
-    <h3>13. Volume of Cuboid</h3>
-    <p><b>Formula:</b> \( V=lwh \)</p>
-    <p><b>Explanation:</b> Multiply length × width × height.</p>
-    <p><b>Example:</b> l=5, w=4, h=3 → V=60.</p>
-  </div>
-
-  <div class="formula">
-    <h3>14. Volume of Cylinder</h3>
-    <p><b>Formula:</b> \( V=\pi r^2h \)</p>
-    <p><b>Explanation:</b> Circle base × height.</p>
-    <p><b>Example:</b> r=7, h=10 → V≈1540.</p>
-  </div>
-
-  <div class="formula">
-    <h3>15. Surface Area of Cylinder</h3>
-    <p><b>Formula:</b> \( A=2\pi r(h+r) \)</p>
-    <p><b>Explanation:</b> Curved + top + bottom area.</p>
-    <p><b>Example:</b> r=7, h=10 → A≈748.</p>
-  </div>
-
-  <div class="formula">
-    <h3>16. Volume of Sphere</h3>
-    <p><b>Formula:</b> \( V=\frac{4}{3}\pi r^3 \)</p>
-    <p><b>Explanation:</b> Space inside a ball.</p>
-    <p><b>Example:</b> r=6 → V≈904.8.</p>
-  </div>
-
-  <div class="formula">
-    <h3>17. Surface Area of Sphere</h3>
-    <p><b>Formula:</b> \( A=4\pi r^2 \)</p>
-    <p><b>Explanation:</b> Outside area of a ball.</p>
-    <p><b>Example:</b> r=6 → A≈452.4.</p>
-  </div>
-
-  <div class="formula">
-    <h3>18. Volume of Cone</h3>
-    <p><b>Formula:</b> \( V=\frac{1}{3}\pi r^2h \)</p>
-    <p><b>Explanation:</b> One-third of cylinder volume.</p>
-    <p><b>Example:</b> r=3, h=9 → V≈84.8.</p>
-  </div>
-
-  <div class="formula">
-    <h3>19. Surface Area of Cone</h3>
-    <p><b>Formula:</b> \( A=\pi r(l+r) \), where \(l=\sqrt{r^2+h^2}\)</p>
-    <p><b>Explanation:</b> Curved surface + base.</p>
-    <p><b>Example:</b> r=3, h=4 → l=5, A≈75.4.</p>
-  </div>
-
-  <div class="formula">
-    <h3>20. Volume of Pyramid</h3>
-    <p><b>Formula:</b> \( V=\frac{1}{3}Bh \)</p>
-    <p><b>Explanation:</b> Base area × height ÷ 3.</p>
-    <p><b>Example:</b> Base=16, h=9 → V=48.</p>
-  </div>
-</div>
-<div id="extra-basic-formulas">
-  <h1>Extra 2 Basic Formulas (to complete 22)</h1>
-
-  <div class="formula">
-    <h3>21. (x+a)³ - (x+b)³</h3>
-    <p><b>Formula:</b> \( (x+a)^3 - (x+b)^3 = (a-b)\big(3x^2 + 3x(a+b) + (a^2+ab+b^2)\big) \)</p>
-    <p><b>Explanation:</b> Difference of two cube binomials expands like difference of cubes.</p>
-    <p><b>Example:</b> (x+2)³ - (x+1)³ = (1)(3x²+9x+7).</p>
-  </div>
-
-  <div class="formula">
-    <h3>22. (x+a)³ + (x+b)³</h3>
-    <p><b>Formula:</b> \( (x+a)^3 + (x+b)^3 = (a+b)\big(3x^2 + 3x(a+b) + (a^2-ab+b^2)\big) + 2x^3 \)</p>
-    <p><b>Explanation:</b> Sum of two cube binomials, expanded form.</p>
-    <p><b>Example:</b> (x+2)³ + (x+1)³ = 2x³ + 9x² + 21x + 27.</p>
-  </div>
-</div>
-</div>
+(async()=>{
+  await openDB(); renderAll();
+})(); 
+  </script>
 </body>
 </html>
